@@ -1,0 +1,218 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
+
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --background-color-light: #f8f9fa;
+  --text-color-light: #333;
+  --container-bg-light: #fff;
+  --background-color-dark: #121212;
+  --text-color-dark: #f1f1f1;
+  --container-bg-dark: #1e1e1e;
+  --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  --border-radius: 12px;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column; /* Changed */
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+body.light-theme {
+  background-color: var(--background-color-light);
+  color: var(--text-color-light);
+  background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
+}
+
+body.dark-theme {
+  background-color: var(--background-color-dark);
+  color: var(--text-color-dark);
+  background-image: linear-gradient(to top, #2c3e50 0%, #4ca1af 100%);
+}
+
+.container {
+  padding: 40px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+  transition: transform 0.3s ease, background-color 0.3s;
+  flex: 1; /* Added */
+}
+
+body.light-theme .container {
+  background-color: var(--container-bg-light);
+}
+
+body.dark-theme .container {
+  background-color: var(--container-bg-dark);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.container:hover {
+  transform: translateY(-5px);
+}
+
+h1 {
+  color: var(--primary-color);
+  margin-bottom: 15px;
+  font-size: 2.2em;
+}
+
+p {
+  margin-bottom: 30px;
+  font-size: 1.1em;
+}
+
+body.light-theme p {
+    color: var(--secondary-color);
+}
+
+body.dark-theme p {
+    color: #a0a0a0;
+}
+
+form {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.file-upload-label {
+  border: 2px dashed var(--primary-color);
+  border-radius: var(--border-radius);
+  padding: 30px;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.3s, border-color 0.3s;
+  margin-bottom: 20px;
+}
+
+.file-upload-label:hover {
+  border-color: #0056b3;
+}
+
+body.light-theme .file-upload-label:hover {
+    background-color: #f1f1f1;
+}
+
+body.dark-theme .file-upload-label:hover {
+    background-color: #2a2a2a;
+}
+
+.file-upload-label span {
+  font-size: 1em;
+}
+
+#fileName {
+  margin-top: 10px;
+  font-style: italic;
+  color: var(--primary-color);
+}
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 15px 30px;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  font-size: 1.1em;
+  font-weight: 700;
+}
+
+button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+button:disabled {
+  background-color: #a0a0a0;
+  cursor: not-allowed;
+}
+
+#loader {
+  margin-top: 25px;
+  font-style: italic;
+}
+
+#result {
+  margin-top: 30px;
+  text-align: left;
+  padding: 20px;
+  border-radius: var(--border-radius);
+  max-height: 300px; /* Added max-height */
+  overflow-y: auto; /* Added overflow-y */
+}
+
+body.light-theme #result {
+    background-color: #f8f9fa;
+}
+
+body.dark-theme #result {
+    background-color: #2a2a2a;
+}
+
+#result h3 {
+  color: var(--primary-color);
+  margin-top: 0;
+}
+
+#summaryText {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.hidden {
+  display: none;
+}
+
+footer {
+  font-size: 0.9em;
+  margin-top: 20px; /* Added */
+}
+
+.theme-switcher {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    cursor: pointer;
+    font-size: 1.5em;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 1.8em;
+  }
+
+  p {
+    font-size: 1em;
+  }
+
+  button {
+    padding: 12px 24px;
+  }
+
+  .theme-switcher {
+    top: 10px;
+    right: 10px;
+  }
+}
