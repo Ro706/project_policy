@@ -13,7 +13,6 @@ router.post(
     body('name').isString().notEmpty().withMessage('Name is required'),
     body('email').isEmail().withMessage('Invalid email address'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
-    body('phonenumber').isString().notEmpty().withMessage('Phone number is required'),
   ],
   async (req, res) => {
     // Check for validation errors
@@ -35,7 +34,6 @@ router.post(
       const user = await User.create({
         name: req.body.name,
         email: req.body.email,
-        phonenumber : req.body.phonenumber,
         password: hashedPassword,
       });
       //create a token
