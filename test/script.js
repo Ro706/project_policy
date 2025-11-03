@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
             const response = await fetch(
-                "http://localhost:5678/webhook-test/7104db72-dd00-413f-8132-fddf6a0f4bf7",
+                "https://iu62rqhpva9xlemjm553xgaw.hooks.n8n.cloud/webhook-test/7104db72-dd00-413f-8132-fddf6a0f4bf7",
                 {
                     method: "POST",
                     body: formData,
