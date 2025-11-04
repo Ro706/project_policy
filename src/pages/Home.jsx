@@ -54,6 +54,7 @@ const Home = () => {
         }
       );
 
+      // Handle text or JSON webhook responses gracefully
       const contentType = response.headers.get("content-type");
       let data;
       if (contentType && contentType.includes("application/json")) {
@@ -83,7 +84,6 @@ const Home = () => {
     utter.pitch = 1;
 
     utter.onstart = () => setAudioState("playing");
-    utter.onpause = () => setAudioState("paused");
     utter.onend = () => setAudioState("stopped");
     utter.onerror = () => setAudioState("stopped");
 
@@ -92,11 +92,12 @@ const Home = () => {
   };
 
   const handlePause = () => {
-    if (synthRef.current.speaking && !synthRef.current.paused) {
-      synthRef.current.pause();
+    const synth = synthRef.current;
+    if (synth.speaking && !synth.paused) {
+      synth.pause();
       setAudioState("paused");
-    } else if (synthRef.current.paused) {
-      synthRef.current.resume();
+    } else if (synth.paused) {
+      synth.resume();
       setAudioState("playing");
     }
   };
@@ -111,7 +112,7 @@ const Home = () => {
       <div className="summarizer-card">
         {/* Header */}
         <div className="header">
-          <img src={policy} alt="Logo"  className="logo" width="100" height="100" />
+          <img src={policy} alt="Logo" className="logo" width="100" height="100" />
           <div>
             <h2>Policy Summarizer</h2>
             <p>
@@ -122,7 +123,7 @@ const Home = () => {
         </div>
 
         <div className="form-output-container">
-          {/* Left Side */}
+          {/* Left: Upload & Options */}
           <div className="form-section">
             <h3>Upload & Options</h3>
 
@@ -183,7 +184,7 @@ const Home = () => {
             </button>
           </div>
 
-          {/* Right Side */}
+          {/* Right: Output */}
           <div className="output-section">
             <h3>Output</h3>
             <div className="output-box">
@@ -202,17 +203,17 @@ const Home = () => {
                       <div className="audio-controls">
                         <button
                           className="audio-btn"
-                          onClick={handlePause}
-                          disabled={audioState === "stopped"}
-                        >
-                          {audioState === "paused" ? "⏸️ pause" : "⏸ pause"}
-                        </button>
-                        <button
-                          className="audio-btn"
-                                                  onClick={handlePlay}
+                          onClick={handlePlay}
                           disabled={audioState === "playing"}
                         >
                           ▶️ Play
+                        </button>
+                        <button
+                          className="audio-btn"
+                          onClick={handlePause}
+                          disabled={audioState === "stopped"}
+                        >
+                          {audioState === "paused" ? "▶️ Resume" : "⏸ Pause"}
                         </button>
                         <button
                           className="audio-btn stop"

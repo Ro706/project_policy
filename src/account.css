@@ -1,0 +1,43 @@
+.account-container {
+  padding: 30px;
+  color: white;
+}
+
+.account-info {
+  background: #181c2e;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.account-info input {
+  padding: 6px;
+  border: none;
+  border-radius: 6px;
+  background: #2a2f45;
+  color: white;
+}
+
+.account-info button {
+  background: linear-gradient(90deg, #4a7eff, #9157ff);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.summary-card {
+  background: #1e2235;
+  padding: 15px;
+  border-radius: 10px;
+  line-height: 1.6;
+  color: #d3d8ff;
+}
