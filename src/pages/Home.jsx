@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import "../home.css";
+import policy from "../assets/Policy.png";
 
 const Home = () => {
   const [file, setFile] = useState(null);
@@ -110,9 +111,9 @@ const Home = () => {
       <div className="summarizer-card">
         {/* Header */}
         <div className="header">
-          <div className="logo">PS</div>
+          <img src={policy} alt="Logo"  className="logo" width="100" height="100" />
           <div>
-            <h2>PDF Summarizer</h2>
+            <h2>Policy Summarizer</h2>
             <p>
               Upload a PDF and get a concise summary. Choose summary length,
               bullet format, or keep tone.
