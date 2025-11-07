@@ -226,6 +226,9 @@ select {
 
 /* Responsive */
 @media (max-width: 900px) {
+  body{
+    margin-top: 250px;
+  }
   .form-output-container {
     flex-direction: column;
   }

@@ -2,9 +2,14 @@
   padding: 30px;
   color: white;
   max-width: 800px;
-  margin: 0 auto;
+  margin-top: -220px;
 }
-
+@media screen  and (max-width: 600px) {
+  .feedback-container {
+    margin-top: -350px;
+  }
+  
+}
 .feedback-form {
   display: flex;
   flex-direction: column;

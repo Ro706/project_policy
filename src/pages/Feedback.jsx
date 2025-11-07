@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './feedback.css';
+import '../feedback.css';
 
 const Feedback = () => {
   const [experience, setExperience] = useState('');
