@@ -33,7 +33,6 @@ The Policy Summarizer is a web application that allows users to upload PDF docum
 
 ### APIs
 
-*   OpenAI API (for chat functionality)
 *   Google Translate API (for translation)
 
 ## Getting Started
@@ -94,11 +93,6 @@ The Policy Summarizer is a web application that allows users to upload PDF docum
 *   `POST /api/summary/add`: Add a new summary.
 *   `GET /api/summary/getall`: Get all summaries for the logged-in user.
 
-### Chat
-
-*   `POST /api/chat/init`: Initialize a new chat session.
-*   `POST /api/chat/ask`: Ask a question about a PDF document.
-*   `GET /api/chat/history/:documentId`: Get the chat history for a document.
 
 ## Flow Diagram
 
@@ -116,3 +110,7 @@ The Policy Summarizer is a web application that allows users to upload PDF docum
 | (Translate, TTS)    |      +---------------------+      +---------------------+
 +---------------------+
 ```
+
+## N8N
+<img width="1915" height="966" alt="image" src="https://github.com/user-attachments/assets/46264459-d9dd-4e92-8f9c-e2fbe7b22d80" />
+
