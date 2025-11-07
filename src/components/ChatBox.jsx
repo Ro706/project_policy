@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './ChatBox.css';
 
 const ChatBox = ({ pdfContent }) => {
@@ -8,8 +8,6 @@ const ChatBox = ({ pdfContent }) => {
     const [chatId, setChatId] = useState(null);
     const [suggestedQuestions, setSuggestedQuestions] = useState([]);
     const messagesEndRef = useRef(null);
-    const [showImagePreview, setShowImagePreview] = useState(false);
-    const [selectedImage, setSelectedImage] = useState(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -18,6 +16,35 @@ const ChatBox = ({ pdfContent }) => {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    const generateSuggestedQuestions = useCallback(async (content) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5000/api/chat/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'auth-token': token
+                },
+                body: JSON.stringify({
+                    question: "Generate 3 relevant questions I could ask about this document",
+                    pdfContent: content,
+                    chatId
+                })
+            });
+
+            const data = await response.json();
+            if (data.answer) {
+                const questions = data.answer
+                    .split('\n')
+                    .filter(q => q.trim().endsWith('?'))
+                    .map(q => q.trim());
+                setSuggestedQuestions(questions);
+            }
+        } catch (error) {
+            console.error('Error generating suggestions:', error);
+        }
+    }, [chatId]);
 
     // Initialize chat and load history
     useEffect(() => {
@@ -57,36 +84,8 @@ const ChatBox = ({ pdfContent }) => {
         if (pdfContent) {
             initializeChat();
         }
-    }, [pdfContent]);
+    }, [pdfContent, generateSuggestedQuestions]);
 
-    const generateSuggestedQuestions = async (content) => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/chat/ask', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'auth-token': token
-                },
-                body: JSON.stringify({
-                    question: "Generate 3 relevant questions I could ask about this document",
-                    pdfContent: content,
-                    chatId
-                })
-            });
-
-            const data = await response.json();
-            if (data.answer) {
-                const questions = data.answer
-                    .split('\n')
-                    .filter(q => q.trim().endsWith('?'))
-                    .map(q => q.trim());
-                setSuggestedQuestions(questions);
-            }
-        } catch (error) {
-            console.error('Error generating suggestions:', error);
-        }
-    };
 
     const handleSend = async () => {
         if (!inputMessage.trim() || loading) return;

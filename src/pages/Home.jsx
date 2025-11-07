@@ -8,7 +8,6 @@ const Home = () => {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
   const [summary, setSummary] = useState("");
-  const [pdfContent, setPdfContent] = useState("");
   const [translatedSummary, setTranslatedSummary] = useState("");
   const [loading, setLoading] = useState(false);
   const [translating, setTranslating] = useState(false);
@@ -78,7 +77,8 @@ const Home = () => {
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
 
-    return () => synthRef.current.cancel();
+    const synth = synthRef.current;
+    return () => synth.cancel();
   }, []);
 
   // Animate “Analyzing your document…” text

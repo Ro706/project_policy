@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
-
+import SummaryModal from "../components/SummaryModal";
+import SummaryCard from "../components/SummaryCard";
 const Account = () => {
   const [user, setUser] = useState(null);
   const [summaries, setSummaries] = useState([]);
   const [error, setError] = useState("");
+  const [selectedSummary, setSelectedSummary] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({ name: "", email: "" });
 
-  // ✅ Fetch logged-in user info
   const getUser = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -23,13 +26,13 @@ const Account = () => {
 
       const data = await res.json();
       setUser(data);
+      setFormData({ name: data.name, email: data.email });
     } catch (err) {
       console.error("❌ User fetch error:", err);
       setError(err.message);
     }
   };
 
-  // ✅ Fetch saved summaries
   const getSummaries = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -42,7 +45,7 @@ const Account = () => {
       if (!res.ok) throw new Error("Failed to fetch summaries.");
 
       const data = await res.json();
-      setSummaries(Array.isArray(data) ? data : []); // safety check
+      setSummaries(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("❌ Summary fetch error:", err);
       setError(err.message);
@@ -53,6 +56,57 @@ const Account = () => {
     getUser();
     getSummaries();
   }, []);
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:5000/api/auth/updateuser", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": token,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) throw new Error("Failed to update user.");
+
+      const data = await res.json();
+      setUser(data.user);
+      setIsEditing(false);
+    } catch (err) {
+      console.error("❌ User update error:", err);
+      setError(err.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5000/api/summary/delete/${id}`, {
+        method: "DELETE",
+        headers: {
+          "auth-token": token,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to delete summary.");
+
+      setSummaries(summaries.filter((summary) => summary._id !== id));
+    } catch (err) {
+      console.error("❌ Summary delete error:", err);
+      setError(err.message);
+    }
+  };
+
+  const openModal = (summary) => {
+    setSelectedSummary(summary);
+  };
+
+  const closeModal = () => {
+    setSelectedSummary(null);
+  };
 
   if (error) {
     return (
@@ -65,34 +119,50 @@ const Account = () => {
   if (!user) return <p style={{ padding: "20px" }}>Loading account...</p>;
 
   return (
-    <div className="account-page" style={{ padding: "30px", color: "#fff" }}>
-      <h2>Hello, {user.name}</h2>
-      <p>Email: {user.email}</p>
+    <div className="account-container">
+      <div className="account-info">
+        {isEditing ? (
+          <form onSubmit={handleUpdate}>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            />
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+            <button type="submit">Save</button>
+            <button onClick={() => setIsEditing(false)}>Cancel</button>
+          </form>
+        ) : (
+          <>
+            <h2>Hello, {user.name}</h2>
+            <p>Email: {user.email}</p>
+            <button onClick={() => setIsEditing(true)}>Edit</button>
+          </>
+        )}
+      </div>
 
       <h3 style={{ marginTop: "30px" }}>📝 Your Summaries</h3>
       {summaries.length === 0 ? (
         <p>No summaries found yet.</p>
       ) : (
         <div className="summary-list">
-          {summaries.map((item, idx) => (
-            <div
-              key={idx}
-              className="summary-item"
-              style={{
-                background: "#1e2235",
-                padding: "15px",
-                borderRadius: "8px",
-                marginBottom: "10px",
-              }}
-            >
-              <strong>Summary #{idx + 1}</strong>
-              <pre style={{ whiteSpace: "pre-wrap" }}>{item.summary}</pre>
-              <small>
-                Created: {new Date(item.date).toLocaleString()}
-              </small>
-            </div>
+          {summaries.map((item) => (
+            <SummaryCard
+              key={item._id}
+              summary={item}
+              onOpenModal={openModal}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
+      )}
+
+      {selectedSummary && (
+        <SummaryModal summary={selectedSummary} onClose={closeModal} />
       )}
     </div>
   );
