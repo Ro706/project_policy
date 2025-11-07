@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, NavLink, Link } from "react-router-dom";
 import "../navbar.css";
+import logo from "../assets/Policy.png";
 
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -33,15 +34,16 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-left">
-        <h2 className="logo"></h2>
+        <img src={logo} alt="logo" className="logo" />
         <div className="nav-links">
-          <Link to="/" className="nav-link">Home</Link>
-          <Link to="/about" className="nav-link">About</Link>
-          <Link to="/feedback" className="nav-link">Feedback</Link>
+          <NavLink to="/" className="nav-link">Home</NavLink>
+          <NavLink to="/about" className="nav-link">About</NavLink>
+          <NavLink to="/feedback" className="nav-link">Feedback</NavLink>
         </div>
       </div>
       <div className="user-menu" onClick={() => setDropdownOpen(!dropdownOpen)}>
-        👋 Hello, {userName || "User"}
+        <img src={`https://ui-avatars.com/api/?name=${userName}&background=random`} alt="avatar" className="avatar" />
+        <span className="user-name">Hello, {userName || "User"}</span>
         {dropdownOpen && (
           <div className="dropdown">
             <button onClick={() => navigate("/account")}>Account</button>
@@ -56,9 +58,17 @@ const Navbar = () => {
       </div>
       {mobileMenuOpen && (
         <div className="mobile-nav-links">
-          <Link to="/" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-          <Link to="/about" className="nav-link" onClick={() => setMobileMenuOpen(false)}>About</Link>
-          <Link to="/feedback" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Feedback</Link>
+          <div className="separator"></div>
+          <NavLink to="/" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Home</NavLink>
+          <NavLink to="/about" className="nav-link" onClick={() => setMobileMenuOpen(false)}>About</NavLink>
+          <NavLink to="/feedback" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Feedback</NavLink>
+          <div className="separator"></div>
+          <Link to="/account" className="mobile-user-info" onClick={() => setMobileMenuOpen(false)}>
+            <img src={`https://ui-avatars.com/api/?name=${userName}&background=random`} alt="avatar" className="avatar" />
+            <span>{userName || "User"}</span>
+          </Link>
+          <div className="separator"></div>
+          <button className="logout-btn" onClick={() => {handleLogout(); setMobileMenuOpen(false);}}>Logout</button>
         </div>
       )}
     </nav>
