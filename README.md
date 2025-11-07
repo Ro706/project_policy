@@ -115,5 +115,6 @@ The Policy Summarizer is a web application that allows users to upload PDF docum
 <img width="1915" height="966" alt="image" src="https://github.com/user-attachments/assets/46264459-d9dd-4e92-8f9c-e2fbe7b22d80" />
 ## Frontend
 <img width="1798" height="831" alt="image" src="https://github.com/user-attachments/assets/8e8c20ab-decf-4828-bf63-cbc4ad1dac43" />
+<img width="1852" height="892" alt="image" src="https://github.com/user-attachments/assets/8d862ba9-b6fa-4276-9ae1-cdfb98ddb952" />
 
 
