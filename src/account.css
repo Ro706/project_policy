@@ -14,6 +14,27 @@
   margin-top: 0;
 }
 
+.account-info form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.account-info input {
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.account-info button {
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  background-color: #4a90e2;
+  color: white;
+}
+
 .summary-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -28,6 +49,9 @@
   color: #d3d8ff;
   cursor: pointer;
   transition: transform 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .summary-card:hover {
@@ -52,4 +76,15 @@
   display: block;
   margin-top: 15px;
   color: #a8b2d1;
+}
+
+.summary-card button {
+  background-color: #e94e77;
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+  align-self: flex-end;
 }

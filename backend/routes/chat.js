@@ -3,46 +3,11 @@ const router = express.Router();
 const fetchuser = require('../middleware/fetchalluser');
 const Chat = require('../models/Chat');
 const OpenAI = require('openai');
-const pdfParse = require('pdf-parse');
 
 // Initialize OpenAI
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
-
-// Helper function to extract text and images from PDF
-async function extractPdfContent(buffer) {
-    try {
-        const data = await pdfParse(buffer);
-        return {
-            text: data.text,
-            info: data.info,
-            metadata: data.metadata,
-            imageData: [] // You can extend this to handle images if needed
-        };
-    } catch (error) {
-        console.error('PDF parsing error:', error);
-        throw error;
-    }
-}
-
-// Helper function to chunk text for context
-function chunkText(text, maxLength = 2000) {
-    const chunks = [];
-    let current = '';
-    const sentences = text.split('. ');
-
-    for (const sentence of sentences) {
-        if ((current + sentence).length <= maxLength) {
-            current += sentence + '. ';
-        } else {
-            if (current) chunks.push(current.trim());
-            current = sentence + '. ';
-        }
-    }
-    if (current) chunks.push(current.trim());
-    return chunks;
-}
 
 // Initialize or get existing chat session
 router.post('/init', fetchuser, async (req, res) => {
@@ -72,7 +37,7 @@ router.post('/init', fetchuser, async (req, res) => {
 // Handle chat messages
 router.post('/ask', fetchuser, async (req, res) => {
     try {
-        const { question, pdfContent, chatId, context } = req.body;
+        const { question, pdfContent, chatId } = req.body;
         const userId = req.user.id;
 
         // Basic input validation
@@ -130,7 +95,7 @@ router.post('/ask', fetchuser, async (req, res) => {
                 chatId: chat._id,
                 messageHistory: chat.messages
             });
-        } catch (error) {
+        } catch {
             // Fallback to basic response if OpenAI fails
             const fallbackResponse = await generateBasicResponse(question, pdfContent);
             
