@@ -225,6 +225,9 @@ select {
 }
 
 @media (max-width: 768px) {
+  .summarizer-container {
+    padding: 15px;
+  }
   .summarizer-card {
     padding: 20px;
   }
@@ -264,7 +267,7 @@ select {
   }
 
   body {
-    margin-top: 120px;
+    margin-top: 230px;
   }
 }
 
