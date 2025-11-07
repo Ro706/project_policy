@@ -1,23 +1,97 @@
 import React, { useState, useRef, useEffect } from "react";
 import "../home.css";
 import policy from "../assets/Policy.png";
+import jsPDF from 'jspdf';
+import ChatBox from "../components/ChatBox";
 
 const Home = () => {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
   const [summary, setSummary] = useState("");
+  const [pdfContent, setPdfContent] = useState("");
+  const [translatedSummary, setTranslatedSummary] = useState("");
   const [loading, setLoading] = useState(false);
-  const [wordLimit, setWordLimit] = useState(700);
+  const [translating, setTranslating] = useState(false);
+  const [loadingText, setLoadingText] = useState("Analyzing your document");
+  const [wordLimit, setWordLimit] = useState(200);
   const [language, setLanguage] = useState("English");
   const [audioState, setAudioState] = useState("stopped"); // "playing", "paused", "stopped"
+  const [voices, setVoices] = useState([]);
+  
+  // Language configuration with ISO codes and native names
+  const languageConfig = {
+    English: { code: 'en-US', nativeName: 'English', translateCode: 'en' },
+    Hindi: { code: 'hi-IN', nativeName: 'हिन्दी', translateCode: 'hi' },
+    Bengali: { code: 'bn-IN', nativeName: 'বাংলা', translateCode: 'bn' },
+    Telugu: { code: 'te-IN', nativeName: 'తెలుగు', translateCode: 'te' },
+    Marathi: { code: 'mr-IN', nativeName: 'मराठी', translateCode: 'mr' },
+    Tamil: { code: 'ta-IN', nativeName: 'தமிழ்', translateCode: 'ta' },
+    Gujarati: { code: 'gu-IN', nativeName: 'ગુજરાતી', translateCode: 'gu' },
+    Kannada: { code: 'kn-IN', nativeName: 'ಕನ್ನಡ', translateCode: 'kn' },
+    Odia: { code: 'or-IN', nativeName: 'ଓଡ଼ିଆ', translateCode: 'or' },
+    Malayalam: { code: 'ml-IN', nativeName: 'മലയാളം', translateCode: 'ml' },
+    Punjabi: { code: 'pa-IN', nativeName: 'ਪੰਜਾਬੀ', translateCode: 'pa' },
+    Assamese: { code: 'as-IN', nativeName: 'অসমীয়া', translateCode: 'as' },
+    Nepali: { code: 'ne-NP', nativeName: 'नेपाली', translateCode: 'ne' },
+    Sanskrit: { code: 'sa-IN', nativeName: 'संस्कृतम्', translateCode: 'sa' },
+    Urdu: { code: 'ur-IN', nativeName: 'اردو', translateCode: 'ur' }
+  };
+
+  const translateText = async (text, targetLang) => {
+    if (targetLang === 'English') return text;
+    
+    setTranslating(true);
+    try {
+      const targetCode = languageConfig[targetLang].translateCode;
+      const response = await fetch(
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${targetCode}&dt=t&q=${encodeURIComponent(text)}`
+      );
+      
+      const data = await response.json();
+      // Extract translated text from the response
+      const translatedText = data[0].map(x => x[0]).join('');
+      return translatedText;
+    } catch (error) {
+      console.error('Translation error:', error);
+      return text; // Return original text if translation fails
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   const fileInputRef = useRef(null);
   const synthRef = useRef(window.speechSynthesis);
   const utterRef = useRef(null);
 
+  // --- Load available system voices and check language support ---
   useEffect(() => {
+    const loadVoices = () => {
+      const availableVoices = synthRef.current.getVoices();
+      setVoices(availableVoices);
+      
+      // Log available languages for debugging
+      const availableLangs = new Set(availableVoices.map(voice => voice.lang));
+      console.log('Available TTS languages:', [...availableLangs]);
+    };
+
+    // Load immediately and again when voices change
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+
     return () => synthRef.current.cancel();
   }, []);
+
+  // Animate “Analyzing your document…” text
+  useEffect(() => {
+    if (loading) {
+      const interval = setInterval(() => {
+        setLoadingText((prev) =>
+          prev.length < 28 ? prev + "." : "Analyzing your document"
+        );
+      }, 400);
+      return () => clearInterval(interval);
+    }
+  }, [loading]);
 
   const handleChooseFile = () => fileInputRef.current.click();
 
@@ -37,6 +111,7 @@ const Home = () => {
 
     setLoading(true);
     setSummary("");
+    setTranslatedSummary("");
 
     try {
       const formData = new FormData();
@@ -54,7 +129,6 @@ const Home = () => {
         }
       );
 
-      // Handle text or JSON webhook responses gracefully
       const contentType = response.headers.get("content-type");
       let data;
       if (contentType && contentType.includes("application/json")) {
@@ -64,10 +138,17 @@ const Home = () => {
         data = await response.text();
       }
 
-      setSummary(data.trim() || "✅ Summary generated successfully.");
+      const summaryText = data.trim() || "✅ Summary generated successfully.";
+      setSummary(summaryText);
+      if (language !== 'English') {
+        const translated = await translateText(summaryText, language);
+        setTranslatedSummary(translated);
+      }
     } catch (error) {
       console.error("❌ Upload error:", error);
-      setSummary("❌ Upload failed. Please check your webhook connection.");
+      const errorMessage = "❌ Upload failed. Please check your webhook connection.";
+      setSummary(errorMessage);
+      setTranslatedSummary(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -78,14 +159,49 @@ const Home = () => {
     if (!summary) return;
     synthRef.current.cancel();
 
-    const utter = new SpeechSynthesisUtterance(summary);
-    utter.lang = "en-US";
-    utter.rate = 1;
+    const langConfig = languageConfig[language];
+    const langCode = langConfig ? langConfig.code : 'en-US';
+
+    // Get all voices that match the exact language code
+    const exactMatches = voices.filter(
+      voice => voice.lang.toLowerCase() === langCode.toLowerCase()
+    );
+
+    // Get all voices that match the language prefix (e.g., 'hi' for 'hi-IN')
+    const prefix = langCode.split('-')[0];
+    const prefixMatches = voices.filter(
+      voice => voice.lang.toLowerCase().startsWith(prefix.toLowerCase())
+    );
+
+    // Select the best available voice
+    let selectedVoice;
+    if (exactMatches.length > 0) {
+      // Prefer female voices if available (they tend to be clearer)
+      selectedVoice = exactMatches.find(voice => voice.name.includes('Female')) || exactMatches[0];
+    } else if (prefixMatches.length > 0) {
+      selectedVoice = prefixMatches.find(voice => voice.name.includes('Female')) || prefixMatches[0];
+    } else {
+      // Fallback to English
+      selectedVoice = voices.find(voice => voice.lang === 'en-US') || voices[0];
+      console.warn(
+        `⚠️ No voice found for ${language} (${langCode}). Using English voice instead. ` +
+        `Install ${langConfig.nativeName} TTS voice for natural speech.`
+      );
+    }
+
+    const textToSpeak = language === 'English' ? summary : translatedSummary;
+    const utter = new SpeechSynthesisUtterance(textToSpeak);
+    utter.lang = langCode;
+    utter.voice = selectedVoice || null;
+    utter.rate = 0.9; // Slightly slower rate for better clarity
     utter.pitch = 1;
 
     utter.onstart = () => setAudioState("playing");
     utter.onend = () => setAudioState("stopped");
-    utter.onerror = () => setAudioState("stopped");
+    utter.onerror = (e) => {
+      console.error("Speech error:", e);
+      setAudioState("stopped");
+    };
 
     utterRef.current = utter;
     synthRef.current.speak(utter);
@@ -105,6 +221,36 @@ const Home = () => {
   const handleStop = () => {
     synthRef.current.cancel();
     setAudioState("stopped");
+  };
+
+  const handleDownloadPDF = () => {
+    if (!summary) return;
+    
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const maxWidth = pageWidth - 2 * margin;
+    
+    // Add title
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.text('Policy Summary', margin, margin);
+    
+    // Add content
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'normal');
+    
+    const splitText = doc.splitTextToSize(summary, maxWidth);
+    doc.text(splitText, margin, margin + 10);
+    
+    // Add footer with date
+    const date = new Date().toLocaleDateString();
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated on ${date}`, margin, doc.internal.pageSize.getHeight() - 10);
+    
+    // Save the PDF
+    doc.save('policy-summary.pdf');
   };
 
   return (
@@ -165,12 +311,19 @@ const Home = () => {
                 <p>Languages</p>
                 <select
                   value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
+                  onChange={async (e) => {
+                    setLanguage(e.target.value);
+                    if (summary) {
+                      const translated = await translateText(summary, e.target.value);
+                      setTranslatedSummary(translated);
+                    }
+                  }}
                 >
-                  <option>English</option>
-                  <option>Hindi</option>
-                  <option>Spanish</option>
-                  <option>French</option>
+                  {Object.entries(languageConfig).map(([lang, config]) => (
+                    <option key={lang} value={lang}>
+                      {`${lang} (${config.nativeName})`}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -189,12 +342,20 @@ const Home = () => {
             <h3>Output</h3>
             <div className="output-box">
               {loading ? (
-                <p className="loader">Analyzing your document...</p>
+                <div className="interactive-loader">
+                  <div className="spinner"></div>
+                  <p className="loader-text">{loadingText} 🧠</p>
+                  <div className="progress-bar">
+                    <div className="progress"></div>
+                  </div>
+                </div>
               ) : (
                 <>
                   <div className="scrollable-output">
                     <p className="summary-text">
-                      {summary || "Your summary will appear here."}
+                      {translating ? "Translating..." : 
+                       (language === 'English' ? summary : translatedSummary) || 
+                       "Your summary will appear here."}
                     </p>
                   </div>
 
@@ -222,6 +383,13 @@ const Home = () => {
                         >
                           ⏹ Stop
                         </button>
+                        <button
+                          className="audio-btn download"
+                          onClick={handleDownloadPDF}
+                          disabled={!summary}
+                        >
+                          📥 Download PDF
+                        </button>
                       </div>
 
                       <div className="waveform">
@@ -240,6 +408,7 @@ const Home = () => {
                 </>
               )}
             </div>
+            {summary && <ChatBox pdfContent={summary} />}
           </div>
         </div>
       </div>

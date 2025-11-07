@@ -186,6 +186,10 @@ select {
   background: #e74c3c;
 }
 
+.audio-btn.download {
+  background: #27ae60;
+}
+
 .audio-btn:hover {
   opacity: 0.85;
 }
