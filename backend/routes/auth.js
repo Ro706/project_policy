@@ -108,8 +108,8 @@ router.post("/getuser", fetchuser, async (req, res) => {
 // PUT /api/auth/updateuser
 router.put('/updateuser', fetchuser, async (req, res) => {
   try {
-    const { name, phonenumber } = req.body;
-    const updatedUser = await User.findByIdAndUpdate(req.user.id, { name, phonenumber }, { new: true }).select('-password');
+    const { name, email } = req.body;
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, { name, email }, { new: true }).select('-password');
     res.json({ success: true, user: updatedUser });
   } catch (error) {
     console.error(error.message);

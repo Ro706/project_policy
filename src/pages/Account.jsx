@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
+import SummaryModal from "../components/SummaryModal";
 
 const Account = () => {
   const [user, setUser] = useState(null);
   const [summaries, setSummaries] = useState([]);
   const [error, setError] = useState("");
+  const [selectedSummary, setSelectedSummary] = useState(null);
 
-  // ✅ Fetch logged-in user info
   const getUser = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -29,7 +30,6 @@ const Account = () => {
     }
   };
 
-  // ✅ Fetch saved summaries
   const getSummaries = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -42,7 +42,7 @@ const Account = () => {
       if (!res.ok) throw new Error("Failed to fetch summaries.");
 
       const data = await res.json();
-      setSummaries(Array.isArray(data) ? data : []); // safety check
+      setSummaries(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("❌ Summary fetch error:", err);
       setError(err.message);
@@ -53,6 +53,14 @@ const Account = () => {
     getUser();
     getSummaries();
   }, []);
+
+  const openModal = (summary) => {
+    setSelectedSummary(summary);
+  };
+
+  const closeModal = () => {
+    setSelectedSummary(null);
+  };
 
   if (error) {
     return (
@@ -65,9 +73,11 @@ const Account = () => {
   if (!user) return <p style={{ padding: "20px" }}>Loading account...</p>;
 
   return (
-    <div className="account-page" style={{ padding: "30px", color: "#fff" }}>
-      <h2>Hello, {user.name}</h2>
-      <p>Email: {user.email}</p>
+    <div className="account-container">
+      <div className="account-info">
+        <h2>Hello, {user.name}</h2>
+        <p>Email: {user.email}</p>
+      </div>
 
       <h3 style={{ marginTop: "30px" }}>📝 Your Summaries</h3>
       {summaries.length === 0 ? (
@@ -77,22 +87,21 @@ const Account = () => {
           {summaries.map((item, idx) => (
             <div
               key={idx}
-              className="summary-item"
-              style={{
-                background: "#1e2235",
-                padding: "15px",
-                borderRadius: "8px",
-                marginBottom: "10px",
-              }}
+              className="summary-card"
+              onClick={() => openModal(item.summaryText)}
             >
               <strong>Summary #{idx + 1}</strong>
-              <pre style={{ whiteSpace: "pre-wrap" }}>{item.summary}</pre>
+              <p className="truncate">{item.summaryText}</p>
               <small>
                 Created: {new Date(item.date).toLocaleString()}
               </small>
             </div>
           ))}
         </div>
+      )}
+
+      {selectedSummary && (
+        <SummaryModal summary={selectedSummary} onClose={closeModal} />
       )}
     </div>
   );

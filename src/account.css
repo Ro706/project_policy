@@ -5,39 +5,51 @@
 
 .account-info {
   background: #181c2e;
-  padding: 15px;
+  padding: 20px;
   border-radius: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
-.account-info input {
-  padding: 6px;
-  border: none;
-  border-radius: 6px;
-  background: #2a2f45;
-  color: white;
-}
-
-.account-info button {
-  background: linear-gradient(90deg, #4a7eff, #9157ff);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
-  cursor: pointer;
-  margin-top: 10px;
+.account-info h2 {
+  margin-top: 0;
 }
 
 .summary-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
 }
 
 .summary-card {
   background: #1e2235;
-  padding: 15px;
+  padding: 20px;
   border-radius: 10px;
   line-height: 1.6;
   color: #d3d8ff;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+
+.summary-card:hover {
+  transform: translateY(-5px);
+}
+
+.summary-card strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+  color: #fff;
+}
+
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.summary-card small {
+  display: block;
+  margin-top: 15px;
+  color: #a8b2d1;
 }
