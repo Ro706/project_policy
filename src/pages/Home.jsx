@@ -278,7 +278,7 @@ const Home = () => {
       <div className="summarizer-card">
         {/* Header */}
         <div className="header">
-          <img src={policy} alt="Logo" className="logo" width="100" height="100" />
+          {/* <img src={policy} alt="Logo" className="logo" width="100" height="100" /> */}
           <div>
             <h2>Policy Summarizer</h2>
             <p>
