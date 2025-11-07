@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import "../home.css";
 import policy from "../assets/Policy.png";
 import jsPDF from 'jspdf';
-import ChatBox from "../components/ChatBox";
+// ChatBox component removed
 
 const Home = () => {
   const [file, setFile] = useState(null);
@@ -140,6 +140,26 @@ const Home = () => {
 
       const summaryText = data.trim() || "✅ Summary generated successfully.";
       setSummary(summaryText);
+
+      // Save the summary to the database
+      try {
+        const token = localStorage.getItem("token");
+        await fetch("http://localhost:5000/api/summary/add", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": token,
+          },
+          body: JSON.stringify({
+            summaryText,
+            wordLimit,
+            language,
+          }),
+        });
+      } catch (error) {
+        console.error("Error saving summary:", error);
+      }
+
       if (language !== 'English') {
         const translated = await translateText(summaryText, language);
         setTranslatedSummary(translated);
@@ -408,7 +428,7 @@ const Home = () => {
                 </>
               )}
             </div>
-            {summary && <ChatBox pdfContent={summary} />}
+            {/* ChatBox removed: chatbot feature disabled */}
           </div>
         </div>
       </div>

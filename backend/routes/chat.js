@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth0Verify');
+const fetchuser = require('../middleware/fetchalluser');
 const Chat = require('../models/Chat');
 const OpenAI = require('openai');
 const pdfParse = require('pdf-parse');
@@ -45,7 +45,7 @@ function chunkText(text, maxLength = 2000) {
 }
 
 // Initialize or get existing chat session
-router.post('/init', auth, async (req, res) => {
+router.post('/init', fetchuser, async (req, res) => {
     try {
         const { documentId, context } = req.body;
         const userId = req.user.id;
@@ -70,7 +70,7 @@ router.post('/init', auth, async (req, res) => {
 });
 
 // Handle chat messages
-router.post('/ask', auth, async (req, res) => {
+router.post('/ask', fetchuser, async (req, res) => {
     try {
         const { question, pdfContent, chatId, context } = req.body;
         const userId = req.user.id;
@@ -172,7 +172,7 @@ async function generateBasicResponse(question, pdfContent) {
 }
 
 // Get chat history
-router.get('/history/:documentId', auth, async (req, res) => {
+router.get('/history/:documentId', fetchuser, async (req, res) => {
     try {
         const { documentId } = req.params;
         const userId = req.user.id;

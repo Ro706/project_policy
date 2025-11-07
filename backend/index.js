@@ -12,7 +12,7 @@ app.use(express.json());
 
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/summary", require("./routes/summary")); 
-app.use("/api/chat", require("./routes/chat"));
+
 
 
 app.listen(port, () => {

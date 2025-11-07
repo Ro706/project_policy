@@ -12,10 +12,11 @@ const Navbar = () => {
       try {
         const token = localStorage.getItem("token");
         const res = await fetch("http://localhost:5000/api/auth/getuser", {
+          method: "POST",
           headers: { "auth-token": token },
         });
         const data = await res.json();
-        if (data?.user?.name) setUserName(data.user.name);
+        if (data?.name) setUserName(data.name);
       } catch {
         setUserName("User");
       }

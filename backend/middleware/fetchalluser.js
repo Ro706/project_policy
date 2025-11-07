@@ -4,9 +4,7 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET; 
 
 const fetchuser = (req, res, next) => {
-    // 2. Get the token from the standard 'Authorization' header
-    const authHeader = req.header('Authorization');
-    const token = authHeader && authHeader.split(' ')[1]; // Format: "{Bearer,TOKEN}" 
+    const token = req.header('auth-token');
 
     if (!token) {
         // 401 : unauthorized user
@@ -23,5 +21,4 @@ const fetchuser = (req, res, next) => {
         res.status(401).send({ error: "Access denied. Invalid token." });
     }
 };
-
 module.exports = fetchuser;
