@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "../navbar.css";
-// import logo from "../assets/Policy.png";
+
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [userName, setUserName] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,17 +34,13 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-left">
         <h2 className="logo"></h2>
-        {/* <img src={logo} alt="logo" className="logo" width={50} height={50}/>   */}
         <div className="nav-links">
           <Link to="/" className="nav-link">Home</Link>
           <Link to="/about" className="nav-link">About</Link>
           <Link to="/feedback" className="nav-link">Feedback</Link>
         </div>
       </div>
-      <div
-        className="user-menu"
-        onClick={() => setDropdownOpen(!dropdownOpen)}
-      >
+      <div className="user-menu" onClick={() => setDropdownOpen(!dropdownOpen)}>
         👋 Hello, {userName || "User"}
         {dropdownOpen && (
           <div className="dropdown">
@@ -52,6 +49,18 @@ const Navbar = () => {
           </div>
         )}
       </div>
+      <div className="hamburger" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      {mobileMenuOpen && (
+        <div className="mobile-nav-links">
+          <Link to="/" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+          <Link to="/about" className="nav-link" onClick={() => setMobileMenuOpen(false)}>About</Link>
+          <Link to="/feedback" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Feedback</Link>
+        </div>
+      )}
     </nav>
   );
 };

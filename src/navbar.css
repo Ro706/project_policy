@@ -62,3 +62,42 @@
 .dropdown button:hover {
   color: #4a7eff;
 }
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.hamburger span {
+  width: 25px;
+  height: 3px;
+  background-color: white;
+  border-radius: 2px;
+}
+
+.mobile-nav-links {
+  display: none;
+  flex-direction: column;
+  position: absolute;
+  top: 60px;
+  left: 0;
+  width: 100%;
+  background-color: #181c2e;
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
+  .mobile-nav-links {
+    display: flex;
+  }
+}
