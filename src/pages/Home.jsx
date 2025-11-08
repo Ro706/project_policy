@@ -120,7 +120,7 @@ const Home = () => {
       formData.append("language", language);
 
       const response = await fetch(
-        "http://localhost:5678/webhook-test/7104db72-dd00-413f-8132-fddf6a0f4bf7",
+        "http://localhost:5678/webhook-test/6d3ce1cb-025a-4cd8-808a-d2a804aea741",
         {
           method: "POST",
           body: formData,
@@ -133,7 +133,7 @@ const Home = () => {
       let data;
       if (contentType && contentType.includes("application/json")) {
         const json = await response.json();
-        data = json.output || JSON.stringify(json, null, 2);
+        data = json.useroutput || JSON.stringify(json, null, 2);
       } else {
         data = await response.text();
       }
