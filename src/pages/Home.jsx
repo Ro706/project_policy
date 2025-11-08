@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import "../home.css";
-import policy from "../assets/Policy.png";
+// import policy from "../assets/Policy.png";
 import jsPDF from 'jspdf';
-// ChatBox component removed
 
 const Home = () => {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
   const [summary, setSummary] = useState("");
+  const [summaryError, setSummaryError] = useState(false);
   const [translatedSummary, setTranslatedSummary] = useState("");
   const [loading, setLoading] = useState(false);
   const [translating, setTranslating] = useState(false);
@@ -15,6 +15,7 @@ const Home = () => {
   const [wordLimit, setWordLimit] = useState(200);
   const [language, setLanguage] = useState("English");
   const [audioState, setAudioState] = useState("stopped"); // "playing", "paused", "stopped"
+  const [audioUrl, setAudioUrl] = useState(null);
   const [voices, setVoices] = useState([]);
   
   // Language configuration with ISO codes and native names
@@ -59,36 +60,23 @@ const Home = () => {
   };
 
   const fileInputRef = useRef(null);
-  const synthRef = useRef(window.speechSynthesis);
-  const utterRef = useRef(null);
+  const audioRef = useRef(null);
 
-  // --- Load available system voices and check language support ---
-  useEffect(() => {
-    const loadVoices = () => {
-      const availableVoices = synthRef.current.getVoices();
-      setVoices(availableVoices);
-      
-      // Log available languages for debugging
-      const availableLangs = new Set(availableVoices.map(voice => voice.lang));
-      console.log('Available TTS languages:', [...availableLangs]);
-    };
+  const loadingMessages = [
+    "Analyzing...",
+    "Figuring...",
+    "Thinking...",
+    "Deep Thinking...",
+    "Framing...",
+  ];
 
-    // Load immediately and again when voices change
-    loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-
-    const synth = synthRef.current;
-    return () => synth.cancel();
-  }, []);
-
-  // Animate “Analyzing your document…” text
   useEffect(() => {
     if (loading) {
+      let messageIndex = 0;
       const interval = setInterval(() => {
-        setLoadingText((prev) =>
-          prev.length < 28 ? prev + "." : "Analyzing your document"
-        );
-      }, 400);
+        setLoadingText(loadingMessages[messageIndex]);
+        messageIndex = (messageIndex + 1) % loadingMessages.length;
+      }, 1500);
       return () => clearInterval(interval);
     }
   }, [loading]);
@@ -100,6 +88,7 @@ const Home = () => {
     if (uploadedFile) {
       setFile(uploadedFile);
       setFileName(uploadedFile.name);
+      setSummaryError(false); // Reset error state on new file selection
     }
   };
 
@@ -112,6 +101,8 @@ const Home = () => {
     setLoading(true);
     setSummary("");
     setTranslatedSummary("");
+    setSummaryError(false); // Reset error state on new submission
+    setAudioUrl(null); // Reset audio URL
 
     try {
       const formData = new FormData();
@@ -120,7 +111,7 @@ const Home = () => {
       formData.append("language", language);
 
       const response = await fetch(
-        "http://localhost:5678/webhook-test/6d3ce1cb-025a-4cd8-808a-d2a804aea741",
+        "http://localhost:5678/webhook-test/7104db72-dd00-413f-8132-fddf6a0f4bf7",
         {
           method: "POST",
           body: formData,
@@ -129,17 +120,41 @@ const Home = () => {
         }
       );
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const contentType = response.headers.get("content-type");
       let data;
       if (contentType && contentType.includes("application/json")) {
         const json = await response.json();
-        data = json.useroutput || JSON.stringify(json, null, 2);
+        data = json.output || JSON.stringify(json, null, 2);
       } else {
         data = await response.text();
       }
 
       const summaryText = data.trim() || "✅ Summary generated successfully.";
       setSummary(summaryText);
+
+      // Pre-fetch audio
+      try {
+        const ttsResponse = await fetch("http://localhost:5001/api/tts", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            text: summaryText,
+            lang: languageConfig[language].translateCode,
+          }),
+        });
+        const blob = await ttsResponse.blob();
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+      } catch (error) {
+        console.error("Error pre-fetching audio:", error);
+      }
+
 
       // Save the summary to the database
       try {
@@ -154,6 +169,7 @@ const Home = () => {
             summaryText,
             wordLimit,
             language,
+            
           }),
         });
       } catch (error) {
@@ -169,78 +185,37 @@ const Home = () => {
       const errorMessage = "❌ Upload failed. Please check your webhook connection.";
       setSummary(errorMessage);
       setTranslatedSummary(errorMessage);
+      setSummaryError(true); // Set error state on failure
     } finally {
       setLoading(false);
     }
   };
 
   // ---- AUDIO CONTROLS ---- //
-  const handlePlay = () => {
-    if (!summary) return;
-    synthRef.current.cancel();
-
-    const langConfig = languageConfig[language];
-    const langCode = langConfig ? langConfig.code : 'en-US';
-
-    // Get all voices that match the exact language code
-    const exactMatches = voices.filter(
-      voice => voice.lang.toLowerCase() === langCode.toLowerCase()
-    );
-
-    // Get all voices that match the language prefix (e.g., 'hi' for 'hi-IN')
-    const prefix = langCode.split('-')[0];
-    const prefixMatches = voices.filter(
-      voice => voice.lang.toLowerCase().startsWith(prefix.toLowerCase())
-    );
-
-    // Select the best available voice
-    let selectedVoice;
-    if (exactMatches.length > 0) {
-      // Prefer female voices if available (they tend to be clearer)
-      selectedVoice = exactMatches.find(voice => voice.name.includes('Female')) || exactMatches[0];
-    } else if (prefixMatches.length > 0) {
-      selectedVoice = prefixMatches.find(voice => voice.name.includes('Female')) || prefixMatches[0];
-    } else {
-      // Fallback to English
-      selectedVoice = voices.find(voice => voice.lang === 'en-US') || voices[0];
-      console.warn(
-        `⚠️ No voice found for ${language} (${langCode}). Using English voice instead. ` +
-        `Install ${langConfig.nativeName} TTS voice for natural speech.`
-      );
-    }
-
-    const textToSpeak = language === 'English' ? summary : translatedSummary;
-    const utter = new SpeechSynthesisUtterance(textToSpeak);
-    utter.lang = langCode;
-    utter.voice = selectedVoice || null;
-    utter.rate = 0.9; // Slightly slower rate for better clarity
-    utter.pitch = 1;
-
-    utter.onstart = () => setAudioState("playing");
-    utter.onend = () => setAudioState("stopped");
-    utter.onerror = (e) => {
-      console.error("Speech error:", e);
-      setAudioState("stopped");
-    };
-
-    utterRef.current = utter;
-    synthRef.current.speak(utter);
-  };
-
-  const handlePause = () => {
-    const synth = synthRef.current;
-    if (synth.speaking && !synth.paused) {
-      synth.pause();
+  const handlePlayPause = async () => {
+    if (audioState === "playing") {
+      audioRef.current.pause();
       setAudioState("paused");
-    } else if (synth.paused) {
-      synth.resume();
+    } else if (audioState === "paused") {
+      audioRef.current.play();
       setAudioState("playing");
+    } else {
+      if (!audioUrl) return;
+      setAudioState("playing");
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.play();
+      audioRef.current.onended = () => {
+        setAudioState("stopped");
+      };
     }
   };
 
-  const handleStop = () => {
-    synthRef.current.cancel();
-    setAudioState("stopped");
+  const handleReset = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setAudioState("stopped");
+    }
   };
 
   const handleDownloadPDF = () => {
@@ -384,24 +359,19 @@ const Home = () => {
                       <div className="audio-controls">
                         <button
                           className="audio-btn"
-                          onClick={handlePlay}
-                          disabled={audioState === "playing"}
+                          onClick={handlePlayPause}
+                          disabled={!audioUrl}
                         >
-                          ▶️ Play
-                        </button>
-                        <button
-                          className="audio-btn"
-                          onClick={handlePause}
-                          disabled={audioState === "stopped"}
-                        >
-                          {audioState === "paused" ? "▶️ Resume" : "⏸ Pause"}
+                          {audioState === 'playing' && '⏸ Pause'}
+                          {audioState === 'paused' && '▶️ Resume'}
+                          {audioState === 'stopped' && '▶️ Play'}
                         </button>
                         <button
                           className="audio-btn stop"
-                          onClick={handleStop}
+                          onClick={handleReset}
                           disabled={audioState === "stopped"}
                         >
-                          ⏹ Stop
+                          ⏹ Reset
                         </button>
                         <button
                           className="audio-btn download"
@@ -428,7 +398,6 @@ const Home = () => {
                 </>
               )}
             </div>
-            {/* ChatBox removed: chatbot feature disabled */}
           </div>
         </div>
       </div>
