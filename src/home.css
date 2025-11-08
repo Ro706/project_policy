@@ -234,10 +234,6 @@ select {
   .summarizer-container {
     padding: 15px;
   }
-<<<<<<< HEAD
-=======
-
->>>>>>> v2
   .summarizer-card {
     padding: 20px;
   }
@@ -285,18 +281,8 @@ select {
     font-size: 1rem;
   }
 
-<<<<<<< HEAD
   body {
     margin-top: 230px;
-=======
-  .audio-btn {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-
-  .drop-zone {
-    padding: 20px;
->>>>>>> v2
   }
 }
 
