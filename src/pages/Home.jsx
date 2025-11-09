@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import "../home.css";
-// import policy from "../assets/Policy.png";
 import jsPDF from 'jspdf';
 
 const Home = () => {
@@ -16,7 +15,8 @@ const Home = () => {
   const [language, setLanguage] = useState("English");
   const [audioState, setAudioState] = useState("stopped"); // "playing", "paused", "stopped"
   const [audioUrl, setAudioUrl] = useState(null);
-  const [voices, setVoices] = useState([]);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState(null);
   
   // Language configuration with ISO codes and native names
   const languageConfig = {
@@ -36,6 +36,41 @@ const Home = () => {
     Sanskrit: { code: 'sa-IN', nativeName: 'संस्कृतम्', translateCode: 'sa' },
     Urdu: { code: 'ur-IN', nativeName: 'اردو', translateCode: 'ur' }
   };
+
+  const fetchUser = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/auth/getuser", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": token,
+        },
+      });
+      const user = await response.json();
+      if (user.isSubscribed) {
+        const now = new Date();
+        const expiresAt = new Date(user.subscriptionExpiresAt);
+        setSubscriptionExpiresAt(expiresAt);
+        if (expiresAt > now) {
+          setIsSubscribed(true);
+        } else {
+          setIsSubscribed(false);
+        }
+      } else {
+        setIsSubscribed(false);
+        setSubscriptionExpiresAt(null);
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      setIsSubscribed(false); // Assume not subscribed on error
+      setSubscriptionExpiresAt(null);
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
 
   const translateText = async (text, targetLang) => {
     if (targetLang === 'English') return text;
@@ -82,10 +117,6 @@ const Home = () => {
     }
   }, [loading]);
 
-
-
-
-
   const handleChooseFile = () => fileInputRef.current.click();
 
   const handleFileChange = (e) => {
@@ -94,124 +125,6 @@ const Home = () => {
       setFile(uploadedFile);
       setFileName(uploadedFile.name);
       setSummaryError(false); // Reset error state on new file selection
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!file) {
-      alert("Please upload a PDF file first!");
-      return;
-    }
-
-    setLoading(true);
-    setSummary("");
-    setTranslatedSummary("");
-    setSummaryError(false); // Reset error state on new submission
-    setAudioUrl(null); // Reset audio URL
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("wordLimit", wordLimit);
-      formData.append("language", language);
-
-      const response = await fetch(
-        "http://localhost:5678/webhook-test/7104db72-dd00-413f-8132-fddf6a0f4bf7",
-        {
-          method: "POST",
-          body: formData,
-          mode: "cors",
-          headers: { Accept: "application/json, text/plain" },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const contentType = response.headers.get("content-type");
-      let data;
-      if (contentType && contentType.includes("application/json")) {
-        const json = await response.json();
-        data = json.output || JSON.stringify(json, null, 2);
-      } else {
-        data = await response.text();
-      }
-
-      const summaryText = data.trim() || "✅ Summary generated successfully.";
-      setSummary(summaryText);
-
-      // Pre-fetch audio
-      try {
-        const ttsResponse = await fetch("http://localhost:5001/api/tts", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            text: summaryText,
-            lang: languageConfig[language].translateCode,
-          }),
-        });
-        const blob = await ttsResponse.blob();
-        const url = URL.createObjectURL(blob);
-        setAudioUrl(url);
-      } catch (error) {
-        console.error("Error pre-fetching audio:", error);
-      }
-
-
-      // Save the summary to the database
-      try {
-        const token = localStorage.getItem("token");
-        await fetch("http://localhost:5000/api/summary/add", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": token,
-          },
-          body: JSON.stringify({
-            summaryText,
-            wordLimit,
-            language,
-            
-          }),
-        });
-      } catch (error) {
-        console.error("Error saving summary:", error);
-      }
-
-      if (language !== 'English') {
-        const translated = await translateText(summaryText, language);
-        setTranslatedSummary(translated);
-      }
-    } catch (error) {
-      console.error("❌ Upload error:", error);
-      const errorMessage = "❌ Upload failed. Please check your webhook connection.";
-      setSummary(errorMessage);
-      setTranslatedSummary(errorMessage);
-      setSummaryError(true); // Set error state on failure
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ---- AUDIO CONTROLS ---- //
-  const handlePlayPause = async () => {
-    if (audioState === "playing") {
-      audioRef.current.pause();
-      setAudioState("paused");
-    } else if (audioState === "paused") {
-      audioRef.current.play();
-      setAudioState("playing");
-    } else {
-      if (!audioUrl) return;
-      setAudioState("playing");
-      audioRef.current = new Audio(audioUrl);
-      audioRef.current.play();
-      audioRef.current.onended = () => {
-        setAudioState("stopped");
-      };
     }
   };
 
@@ -231,34 +144,253 @@ const Home = () => {
     const margin = 20;
     const maxWidth = pageWidth - 2 * margin;
     
-    // Add title
     doc.setFontSize(16);
     doc.setFont(undefined, 'bold');
     doc.text('Policy Summary', margin, margin);
     
-    // Add content
     doc.setFontSize(12);
     doc.setFont(undefined, 'normal');
     
     const splitText = doc.splitTextToSize(summary, maxWidth);
     doc.text(splitText, margin, margin + 10);
     
-    // Add footer with date
     const date = new Date().toLocaleDateString();
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Generated on ${date}`, margin, doc.internal.pageSize.getHeight() - 10);
     
-    // Save the PDF
     doc.save('policy-summary.pdf');
   };
 
+  const handlePayment = async (onSuccess) => {
+    try {
+      const token = localStorage.getItem("token");
+      const orderUrl = "http://localhost:5000/api/payment/create-order";
+      const orderResponse = await fetch(orderUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": token,
+        },
+        body: JSON.stringify({
+          amount: 99, // 99 INR
+          currency: "INR",
+        }),
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error("Failed to create Razorpay order.");
+      }
+
+      const order = await orderResponse.json();
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Policy Summarizer",
+        description: "30-Day Subscription",
+        order_id: order.id,
+        handler: async (response) => {
+          const verificationUrl = "http://localhost:5000/api/payment/verify-payment";
+          const verificationResponse = await fetch(verificationUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "auth-token": token,
+            },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              amount: order.amount / 100,
+              currency: order.currency,
+            }),
+          });
+
+          const verificationData = await verificationResponse.json();
+          if (verificationData.status === "success") {
+            await fetchUser(); // Refetch user to update subscription status
+            onSuccess();
+          } else {
+            alert("Payment verification failed. Please try again.");
+          }
+        },
+        prefill: {
+          name: "User Name",
+          email: "user@example.com",
+          contact: "9999999999",
+        },
+        notes: {
+          address: "Razorpay Corporate Office",
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Payment error:", error);
+      alert("Something went wrong with the payment. Please try again.");
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!file) {
+      alert("Please upload a PDF file first!");
+      return;
+    }
+
+    const performSubmit = async () => {
+      setLoading(true);
+      setSummary("");
+      setTranslatedSummary("");
+      setSummaryError(false);
+      setAudioUrl(null);
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("wordLimit", wordLimit);
+        formData.append("language", language);
+
+        const response = await fetch(
+          "http://localhost:5678/webhook-test/7104db72-dd00-413f-8132-fddf6a0f4bf7",
+          {
+            method: "POST",
+            body: formData,
+            mode: "cors",
+            headers: { Accept: "application/json, text/plain" },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+  
+        const contentType = response.headers.get("content-type");
+        let data;
+        if (contentType && contentType.includes("application/json")) {
+          const json = await response.json();
+          data = json.output || JSON.stringify(json, null, 2);
+        } else {
+          data = await response.text();
+        }
+  
+        const summaryText = data.trim() || "✅ Summary generated successfully.";
+        setSummary(summaryText);
+
+        try {
+          const ttsResponse = await fetch("http://localhost:5001/api/tts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: summaryText,
+              lang: languageConfig[language].translateCode,
+            }),
+          });
+          const blob = await ttsResponse.blob();
+          const url = URL.createObjectURL(blob);
+          setAudioUrl(url);
+        } catch (error) {
+          console.error("Error pre-fetching audio:", error);
+        }
+
+        try {
+          const token = localStorage.getItem("token");
+          await fetch("http://localhost:5000/api/summary/add", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "auth-token": token,
+            },
+            body: JSON.stringify({ summaryText, wordLimit, language }),
+          });
+        } catch (error) {
+          console.error("Error saving summary:", error);
+        }
+
+        if (language !== 'English') {
+          const translated = await translateText(summaryText, language);
+          setTranslatedSummary(translated);
+        }
+      } catch (error) {
+        console.error("❌ Upload error:", error);
+        const errorMessage = "❌ Upload failed. Please check your webhook connection.";
+        setSummary(errorMessage);
+        setTranslatedSummary(errorMessage);
+        setSummaryError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/payment/check-subscription", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": token,
+        },
+      });
+
+      if (response.ok) {
+        await performSubmit();
+      } else {
+        await handlePayment(performSubmit);
+      }
+    } catch (error) {
+      console.error("Subscription check error:", error);
+      alert("Could not verify subscription status. Please try again.");
+    }
+  };
+
+  const handlePlayPause = async () => {
+    const performPlay = () => {
+      if (audioState === "playing") {
+        audioRef.current.pause();
+        setAudioState("paused");
+      } else if (audioState === "paused") {
+        audioRef.current.play();
+        setAudioState("playing");
+      } else {
+        if (!audioUrl) return;
+        setAudioState("playing");
+        audioRef.current = new Audio(audioUrl);
+        audioRef.current.play();
+        audioRef.current.onended = () => setAudioState("stopped");
+      }
+    };
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/payment/check-subscription", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": token,
+        },
+      });
+
+      if (response.ok) {
+        performPlay();
+      } else {
+        await handlePayment(performPlay);
+      }
+    } catch (error) {
+      console.error("Subscription check error:", error);
+      alert("Could not verify subscription status. Please try again.");
+    }
+  };
+  
   return (
     <div className="summarizer-container">
       <div className="summarizer-card">
         {/* Header */}
         <div className="header">
-          {/* <img src={policy} alt="Logo" className="logo" width="100" height="100" /> */}
           <div>
             <h2>Policy Summarizer</h2>
             <p>
@@ -359,7 +491,7 @@ const Home = () => {
                     </p>
                   </div>
 
-                  {summary && (
+                  {summary && !summaryError && (
                     <div className="audio-section">
                       <div className="audio-controls">
                         <button

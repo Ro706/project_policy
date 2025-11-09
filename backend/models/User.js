@@ -18,6 +18,13 @@ const UserSchema = new Schema({
     date:{
         type: Date,
         default: Date.now //creation date (current date)
+    },
+    isSubscribed: {
+        type: Boolean,
+        default: false
+    },
+    subscriptionExpiresAt: {
+        type: Date
     }
 });
 

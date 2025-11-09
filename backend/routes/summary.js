@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const fetchuser = require("../middleware/fetchalluser");
+const checkSubscription = require("../middleware/checkSubscription");
 const Summary = require("../models/Summary");
 
 // Add summary
-router.post("/add", fetchuser, async (req, res) => {
+router.post("/add", fetchuser, checkSubscription, async (req, res) => {
   try {
     const { summaryText, wordLimit, language } = req.body;
     const newSummary = new Summary({
@@ -22,7 +23,7 @@ router.post("/add", fetchuser, async (req, res) => {
 });
 
 // Get all summaries of logged-in user
-router.get("/getall", fetchuser, async (req, res) => {
+router.get("/getall", fetchuser, checkSubscription, async (req, res) => {
   const summaries = await Summary.find({ user: req.user.id });
   res.json(summaries);
 });
