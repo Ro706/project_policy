@@ -62,24 +62,29 @@ const Home = () => {
   const fileInputRef = useRef(null);
   const audioRef = useRef(null);
 
-  const loadingMessages = [
-    "Analyzing...",
-    "Figuring...",
-    "Thinking...",
-    "Deep Thinking...",
-    "Framing...",
-  ];
-
   useEffect(() => {
     if (loading) {
+      const messages = [
+        "Analyzing your document...",
+        "Extracting key points...",
+        "Summarizing the content...",
+        "Finalizing the summary...",
+      ];
       let messageIndex = 0;
+      setLoadingText(messages[messageIndex]);
+
       const interval = setInterval(() => {
-        setLoadingText(loadingMessages[messageIndex]);
-        messageIndex = (messageIndex + 1) % loadingMessages.length;
-      }, 1500);
+        messageIndex = (messageIndex + 1) % messages.length;
+        setLoadingText(messages[messageIndex]);
+      }, 3000); // Change message every 3 seconds
+
       return () => clearInterval(interval);
     }
   }, [loading]);
+
+
+
+
 
   const handleChooseFile = () => fileInputRef.current.click();
 
