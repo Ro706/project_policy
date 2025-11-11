@@ -8,6 +8,27 @@ const Account = () => {
   const [selectedSummary, setSelectedSummary] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "" });
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const checkSubscription = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const res = await fetch("http://localhost:5000/api/payment/check-subscription", {
+        headers: { "auth-token": token },
+      });
+
+      if (res.ok) {
+        setIsSubscribed(true);
+      } else {
+        setIsSubscribed(false);
+      }
+    } catch (err) {
+      console.error("❌ Subscription check error:", err);
+      setIsSubscribed(false);
+    }
+  };
 
   const getUser = async () => {
     try {
@@ -55,6 +76,7 @@ const Account = () => {
   useEffect(() => {
     getUser();
     getSummaries();
+    checkSubscription();
   }, []);
 
   const handleUpdate = async (e) => {
@@ -108,6 +130,80 @@ const Account = () => {
     setSelectedSummary(null);
   };
 
+  const handlePayment = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found, please log in again.");
+
+      const keyRes = await fetch("http://localhost:5000/api/payment/get-key", {
+        headers: { "auth-token": token },
+      });
+      if (!keyRes.ok) throw new Error("Failed to fetch Razorpay key.");
+      const { key } = await keyRes.json();
+
+      const orderRes = await fetch("http://localhost:5000/api/payment/create-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": token,
+        },
+        body: JSON.stringify({ amount: 100, currency: "INR" }),
+      });
+
+      if (!orderRes.ok) throw new Error("Failed to create order.");
+
+      const order = await orderRes.json();
+
+      const options = {
+        key,
+        amount: order.amount,
+        currency: order.currency,
+        name: "project_policy",
+        description: "Test Transaction",
+        image: "https://example.com/your_logo",
+        order_id: order.id,
+        handler: async (response) => {
+          const verifyRes = await fetch("http://localhost:5000/api/payment/verify-payment", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "auth-token": token,
+            },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              amount: order.amount,
+              currency: order.currency,
+            }),
+          });
+
+          if (verifyRes.ok) {
+            alert("Payment successful!");
+            checkSubscription();
+          } else {
+            alert("Payment verification failed.");
+          }
+        },
+        prefill: {
+          name: user.name,
+          email: user.email,
+        },
+        notes: {
+          address: "Razorpay Corporate Office",
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+      const rzp1 = new window.Razorpay(options);
+      rzp1.open();
+    } catch (err) {
+      console.error("❌ Payment error:", err);
+      setError(err.message);
+    }
+  };
+
   if (error) {
     return (
       <div style={{ padding: "20px", color: "red" }}>
@@ -142,6 +238,15 @@ const Account = () => {
             <p>Email: {user.email}</p>
             <button onClick={() => setIsEditing(true)}>Edit</button>
           </>
+        )}
+      </div>
+
+      <div className="subscription-info">
+        <h3>Subscription Status</h3>
+        {isSubscribed ? (
+          <p>You are subscribed!</p>
+        ) : (
+          <button onClick={handlePayment}>Subscribe</button>
         )}
       </div>
 

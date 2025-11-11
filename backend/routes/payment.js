@@ -57,7 +57,9 @@ router.post('/verify-payment', fetchalluser, async (req, res) => {
 
             const user = await User.findById(req.user.id);
             user.isSubscribed = true;
-            const expiryDate = new Date();
+            const expiryDate = user.isSubscribed && user.subscriptionExpiresAt && user.subscriptionExpiresAt > new Date()
+                ? new Date(user.subscriptionExpiresAt)
+                : new Date();
             expiryDate.setDate(expiryDate.getDate() + 30);
             user.subscriptionExpiresAt = expiryDate;
             await user.save();
@@ -75,6 +77,11 @@ router.post('/verify-payment', fetchalluser, async (req, res) => {
 // ROUTE 3: Check subscription status: GET "/api/payment/check-subscription". Login required
 router.get('/check-subscription', fetchalluser, checkSubscription, (req, res) => {
     res.json({ status: 'subscribed' });
+});
+
+// ROUTE 4: Get Razorpay key: GET "/api/payment/get-key". Login required
+router.get('/get-key', fetchalluser, (req, res) => {
+    res.json({ key: process.env.RAZORPAY_KEY_ID });
 });
 
 module.exports = router;

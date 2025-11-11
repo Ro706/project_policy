@@ -2,16 +2,13 @@
 
 ## Project Description
 
-The Policy Summarizer is a web application that allows users to upload PDF documents, get summaries, translate them, and interact with a chatbot to ask questions about the document. This tool is designed to help users quickly understand the content of lengthy policy documents.
+The Policy Summarizer is a web application that allows users to get summaries of their documents. Users can sign up, log in, and manage their summaries. The application also features a subscription model, allowing users to access premium features.
 
 ## Features
 
 *   **User Authentication:** Secure user registration and login functionality.
-*   **PDF Summarization:** Upload a PDF file and get a concise summary with a configurable word limit.
-*   **Translation:** Translate the summary into multiple Indian languages.
-*   **Text-to-Speech:** Listen to the summary in the selected language.
-*   **Chat with PDF:** Ask questions about the uploaded PDF and get answers from an AI-powered chatbot.
-*   **Download Summary:** Download the generated summary as a PDF file.
+*   **Summary Management:** Users can add, view, and delete their summaries.
+*   **Subscription Model:** Users can subscribe to a premium plan to access additional features.
 *   **User Account:** View your account information and a list of your saved summaries.
 
 ## Technologies Used
@@ -20,7 +17,7 @@ The Policy Summarizer is a web application that allows users to upload PDF docum
 
 *   React
 *   Vite
-*   Tailwind CSS
+*   CSS
 *   React Router
 
 ### Backend
@@ -30,10 +27,7 @@ The Policy Summarizer is a web application that allows users to upload PDF docum
 *   MongoDB
 *   Mongoose
 *   JSON Web Token (JWT) for authentication
-
-### APIs
-
-*   Google Translate API (for translation)
+*   Razorpay for payments
 
 ## Getting Started
 
@@ -63,7 +57,8 @@ The Policy Summarizer is a web application that allows users to upload PDF docum
     ```
     MONGO_URI=<your_mongodb_connection_string>
     JWT_SECRET=<your_jwt_secret>
-    OPENAI_API_KEY=<your_openai_api_key>
+    RAZORPAY_KEY_ID=<your_razorpay_key_id>
+    RAZORPAY_KEY_SECRET=<your_razorpay_key_secret>
     ```
 
 ### Running the Application
@@ -71,7 +66,7 @@ The Policy Summarizer is a web application that allows users to upload PDF docum
 1.  Start the backend server:
     ```bash
     cd backend
-    npm start
+    node index.js
     ```
 2.  Start the frontend development server:
     ```bash
@@ -83,7 +78,7 @@ The Policy Summarizer is a web application that allows users to upload PDF docum
 
 ### Auth
 
-*   `POST /api/auth/signup`: Create a new user.
+*   `POST /api/auth/createuser`: Create a new user.
 *   `POST /api/auth/login`: Log in a user.
 *   `POST /api/auth/getuser`: Get the logged-in user's information.
 *   `PUT /api/auth/updateuser`: Update the logged-in user's information.
@@ -92,29 +87,20 @@ The Policy Summarizer is a web application that allows users to upload PDF docum
 
 *   `POST /api/summary/add`: Add a new summary.
 *   `GET /api/summary/getall`: Get all summaries for the logged-in user.
+*   `DELETE /api/summary/delete/:id`: Delete a summary by ID.
 
+### Payment
 
-## Flow Diagram
+*   `POST /api/payment/create-order`: Create a new Razorpay order.
+*   `POST /api/payment/verify-payment`: Verify a Razorpay payment and update the user's subscription.
+*   `GET /api/payment/check-subscription`: Check the subscription status of the logged-in user.
+*   `GET /api/payment/get-key`: Get the Razorpay key ID.
 
-```
-+---------------------+      +---------------------+      +---------------------+
-|   User Registers/   |----->|  User Uploads PDF   |----->|  Backend Generates  |
-|       Logins        |      |      and Sets       |      |      Summary        |
-+---------------------+      |       Options       |      +---------------------+
-                               +---------------------+
-                                         |
-                                         v
-+---------------------+      +---------------------+      +---------------------+
-|  Summary Displayed  |<-----|  Backend Saves      |<-----|  User Interacts     |
-|    with Options     |      |      Summary        |      |    with Chatbot     |
-| (Translate, TTS)    |      +---------------------+      +---------------------+
-+---------------------+
-```
+## Known Issues
 
-## N8N
-<img width="1915" height="966" alt="image" src="https://github.com/user-attachments/assets/46264459-d9dd-4e92-8f9c-e2fbe7b22d80" />
+*   The tests in the `test` directory are not fully implemented and are not currently running correctly.
+
 ## Frontend
+
 <img width="1798" height="831" alt="image" src="https://github.com/user-attachments/assets/8e8c20ab-decf-4828-bf63-cbc4ad1dac43" />
 <img width="1852" height="892" alt="image" src="https://github.com/user-attachments/assets/8d862ba9-b6fa-4276-9ae1-cdfb98ddb952" />
-
-
