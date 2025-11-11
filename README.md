@@ -96,9 +96,6 @@ The Policy Summarizer is a web application that allows users to get summaries of
 *   `GET /api/payment/check-subscription`: Check the subscription status of the logged-in user.
 *   `GET /api/payment/get-key`: Get the Razorpay key ID.
 
-## Known Issues
-
-*   The tests in the `test` directory are not fully implemented and are not currently running correctly.
 
 ## Frontend
 
