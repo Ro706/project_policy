@@ -47,6 +47,7 @@ const Home = () => {
           "auth-token": token,
         },
       });
+      
       const user = await response.json();
       if (user.isSubscribed) {
         const now = new Date();
