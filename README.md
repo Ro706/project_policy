@@ -1,33 +1,136 @@
-# Project Title: Policy Summarizer
+# Project Policy
 
-## Project Description
-
-The Policy Summarizer is a web application that allows users to get summaries of their documents. Users can sign up, log in, and manage their summaries. The application also features a subscription model, allowing users to access premium features.
+Project Policy is a web application that allows users to upload their policy documents, ask questions about them using a chatbot, and get summaries of the documents. It also includes features like user authentication, payment processing, and text-to-speech for the chatbot's responses.
 
 ## Features
 
-*   **User Authentication:** Secure user registration and login functionality.
-*   **Summary Management:** Users can add, view, and delete their summaries.
-*   **Subscription Model:** Users can subscribe to a premium plan to access additional features.
-*   **User Account:** View your account information and a list of your saved summaries.
+*   **User Authentication:** Users can sign up and log in using their email and password or through social providers like Google, GitHub, and LinkedIn.
+*   **Document Upload:** Users can upload their policy documents in PDF format.
+*   **Chatbot:** A chatbot powered by Google's Gemini API that can answer questions about the uploaded documents.
+*   **Text-to-Speech:** The chatbot's responses can be converted to speech.
+*   **Summarization:** Users can get a summary of their uploaded documents.
+*   **Payments:** The application uses Razorpay to handle payments for premium features.
+*   **Feedback:** Users can provide feedback on their experience with the application.
 
-## Technologies Used
+## Tech Stack
 
-### Frontend
+*   **Frontend:**
+    *   React
+    *   Vite
+    *   React Router
+    *   Tailwind CSS
+    *   jsPDF
+*   **Backend:**
+    *   Node.js
+    *   Express
+    *   MongoDB
+    *   Mongoose
+    *   JSON Web Token (JWT)
+    *   Passport.js (for social authentication)
+    *   Razorpay
+    *   PDF-Parse
+*   **Microservices:**
+    *   Python (for Text-to-Speech)
+    *   Python (for Gemini API)
 
-*   React
-*   Vite
-*   CSS
-*   React Router
+## Project Structure
 
-### Backend
+```
+.
+├── backend
+│   ├── db.js
+│   ├── docker.yaml
+│   ├── index.js
+│   ├── middleware
+│   │   ├── checkSubscription.js
+│   │   └── fetchalluser.js
+│   ├── models
+│   │   ├── ChatSession.js
+│   │   ├── Feedback.js
+│   │   ├── Payment.js
+│   │   ├── Summary.js
+│   │   └── User.js
+│   ├── python-tts
+│   │   ├── app.py
+│   │   └── requirements.txt
+│   └── routes
+│       ├── auth.js
+│       ├── chatbot.js
+│       ├── feedback.js
+│       ├── payment.js
+│       └── summary.js
+├── public
+│   └── vite.svg
+├── src
+│   ├── assets
+│   │   ├── chatbot-icon.svg
+│   │   └── Policy.png
+│   ├── components
+│   │   ├── AuthCard.jsx
+│   │   ├── Chatbot.css
+│   │   ├── Chatbot.jsx
+│   │   ├── Navbar.jsx
+│   │   ├── SummaryCard.jsx
+│   │   ├── SummaryModal.css
+│   │   └── SummaryModal.jsx
+│   ├── hooks
+│   │   └── useScript.js
+│   ├── pages
+│   │   ├── About.jsx
+│   │   ├── Account.jsx
+│   │   ├── Feedback.jsx
+│   │   ├── Home.jsx
+│   │   ├── Login.jsx
+│   │   ├── Pricing.jsx
+│   │   └── Signup.jsx
+│   ├── App.css
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── ...
+├── .gitignore
+├── index.html
+├── package.json
+└── ...
+```
 
-*   Node.js
-*   Express
-*   MongoDB
-*   Mongoose
-*   JSON Web Token (JWT) for authentication
-*   Razorpay for payments
+## Flow Diagram
+
+```mermaid
+graph TD
+    A[User] --> B{Frontend};
+    B --> C{Backend API};
+    C --> D[Database];
+    C --> E{Payment Gateway};
+    C --> F{Chatbot Service};
+    F --> G[Gemini API];
+    C --> H{Text-to-Speech Service};
+
+    subgraph Frontend
+        B1[React UI]
+        B2[React Router]
+    end
+
+    subgraph Backend
+        C1[Express Server]
+        C2[API Routes]
+    end
+
+    subgraph Database
+        D1[MongoDB]
+    end
+
+    subgraph External Services
+        E[Razorpay]
+        G[Gemini API]
+    end
+
+    B -- /api --> C;
+    C -- CRUD --> D;
+    C -- /api/payment --> E;
+    C -- /api/chatbot --> F;
+    F -- /api/gemini --> G;
+    C -- /api/tts --> H;
+```
 
 ## Getting Started
 
@@ -35,69 +138,47 @@ The Policy Summarizer is a web application that allows users to get summaries of
 
 *   Node.js
 *   npm
-*   MongoDB
+*   Python
+*   pip
 
 ### Installation
 
-1.  Clone the repository:
+1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/project_policy.git
+    git clone https://github.com/your-username/project-policy.git
+    cd project-policy
     ```
-2.  Install frontend dependencies:
+
+2.  **Install frontend dependencies:**
     ```bash
-    cd project_policy
     npm install
     ```
-3.  Install backend dependencies:
+
+3.  **Install backend dependencies:**
     ```bash
     cd backend
     npm install
     ```
-4.  Create a `.env` file in the `backend` directory and add the following environment variables:
-    ```
-    MONGO_URI=<your_mongodb_connection_string>
-    JWT_SECRET=<your_jwt_secret>
-    RAZORPAY_KEY_ID=<your_razorpay_key_id>
-    RAZORPAY_KEY_SECRET=<your_razorpay_key_secret>
+
+4.  **Install Python dependencies:**
+    ```bash
+    cd python-tts
+    pip install -r requirements.txt
     ```
 
 ### Running the Application
 
-1.  Start the backend server:
+1.  **Start the backend services:**
     ```bash
     cd backend
-    node index.js
+    npm start
     ```
-2.  Start the frontend development server:
+    This will start the Node.js server, the Python text-to-speech service, and the Python Gemini service.
+
+2.  **Start the frontend development server:**
+    In a new terminal, from the root directory:
     ```bash
-    cd ..
     npm run dev
     ```
 
-## API Endpoints
-
-### Auth
-
-*   `POST /api/auth/createuser`: Create a new user.
-*   `POST /api/auth/login`: Log in a user.
-*   `POST /api/auth/getuser`: Get the logged-in user's information.
-*   `PUT /api/auth/updateuser`: Update the logged-in user's information.
-
-### Summary
-
-*   `POST /api/summary/add`: Add a new summary.
-*   `GET /api/summary/getall`: Get all summaries for the logged-in user.
-*   `DELETE /api/summary/delete/:id`: Delete a summary by ID.
-
-### Payment
-
-*   `POST /api/payment/create-order`: Create a new Razorpay order.
-*   `POST /api/payment/verify-payment`: Verify a Razorpay payment and update the user's subscription.
-*   `GET /api/payment/check-subscription`: Check the subscription status of the logged-in user.
-*   `GET /api/payment/get-key`: Get the Razorpay key ID.
-
-
-## Frontend
-
-<img width="1798" height="831" alt="image" src="https://github.com/user-attachments/assets/8e8c20ab-decf-4828-bf63-cbc4ad1dac43" />
-<img width="1852" height="892" alt="image" src="https://github.com/user-attachments/assets/8d862ba9-b6fa-4276-9ae1-cdfb98ddb952" />
+The application will be available at `http://localhost:5173`.
