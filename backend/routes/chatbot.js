@@ -17,12 +17,10 @@ const getGeminiResponse = async (userQuery, context) => {
     const model = genAI.getGenerativeModel({ model: "gemini-pro-latest" });
 
     const prompt = `
-You are an expert chatbot. Answer ONLY using the following document:
-
+You are an expert chatbot.You are made to help User to understand policy. Answer user query using the following document summary:
 --- DOCUMENT START ---
 ${context}
 --- DOCUMENT END ---
-
 User Question: ${userQuery}
 
 Give short and accurate answers based strictly on document content.
