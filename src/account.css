@@ -1,38 +1,154 @@
 .account-container {
-  padding: 30px;
+  padding: 50px 30px 30px 30px;
   color: white;
 }
 
-.account-info {
-  background: #181c2e;
-  padding: 20px;
-  border-radius: 10px;
+.profile-card {
+  background: #1e2235;
+  padding: 24px;
+  border-radius: 12px;
   margin-bottom: 30px;
+  border: 1px solid #2a314e;
 }
 
-.account-info h2 {
-  margin-top: 0;
-}
-
-.account-info form {
+.profile-header {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  gap: 20px;
 }
 
-.account-info input {
-  padding: 8px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #4a90e2;
 }
 
-.account-info button {
-  padding: 10px;
-  border-radius: 5px;
+.profile-info h2 {
+  margin: 0;
+  font-size: 1.8em;
+  color: #e2e8f0;
+}
+
+.profile-info p {
+  margin: 4px 0 0;
+  color: #a8b2d1;
+  font-size: 1.1em;
+}
+
+.edit-button {
+  margin-left: auto;
+  padding: 10px 20px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
   background-color: #4a90e2;
   color: white;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.edit-button:hover {
+  background-color: #357abd;
+}
+
+.edit-form {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 8px;
+  color: #a8b2d1;
+  font-size: 0.9em;
+}
+
+.form-group input {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #3e4a6b;
+  background-color: #181c2e;
+  color: #e2e8f0;
+  font-size: 1em;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.save-button,
+.cancel-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.save-button {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #357abd;
+}
+
+.cancel-button {
+  background-color: #6c757d;
+  color: white;
+}
+
+.cancel-button:hover {
+  background-color: #5a6268;
+}
+
+.subscription-info {
+  background: #1e2235;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  border: 1px solid #2a314e;
+  text-align: center;
+}
+
+.subscription-info h3 {
+  margin-top: 0;
+  font-size: 1.5em;
+  color: #e2e8f0;
+}
+
+.subscription-info p {
+  color: #a8b2d1;
+  font-size: 1.1em;
+}
+
+.subscription-info button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background-color: #42b883;
+  color: white;
+  font-weight: 600;
+  transition: background-color 0.3s;
+  font-size: 1.1em;
+}
+
+.subscription-info button:hover {
+  background-color: #36a374;
 }
 
 .summary-list {
@@ -87,4 +203,63 @@
   cursor: pointer;
   margin-top: 10px;
   align-self: flex-end;
+}
+
+@media (max-width: 768px) {
+  .account-container {
+    margin-top: 250px;
+    padding: 30px 15px;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .edit-button {
+    margin-left: 0;
+    margin-top: 15px;
+  }
+
+  .profile-card,
+  .subscription-info {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .account-container {
+    padding: 20px 10px;
+  }
+
+  .profile-avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .profile-info h2 {
+    font-size: 1.5em;
+  }
+
+  .profile-info p {
+    font-size: 1em;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .save-button,
+  .cancel-button {
+    width: 100%;
+  }
+
+  .subscription-info h3 {
+    font-size: 1.3em;
+  }
+
+  .subscription-info button {
+    width: 100%;
+  }
 }

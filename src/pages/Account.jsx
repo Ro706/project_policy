@@ -216,28 +216,59 @@ const Account = () => {
 
   return (
     <div className="account-container">
-      <div className="account-info">
-        {isEditing ? (
-          <form onSubmit={handleUpdate}>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+      <div className="profile-card">
+        {!isEditing ? (
+          <div className="profile-header">
+            <img
+              src={`https://ui-avatars.com/api/?name=${user.name}&background=0d8abc&color=fff`}
+              alt="Profile"
+              className="profile-avatar"
             />
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
-            <button type="submit">Save</button>
-            <button onClick={() => setIsEditing(false)}>Cancel</button>
-          </form>
+            <div className="profile-info">
+              <h2>{user.name}</h2>
+              <p>{user.email}</p>
+            </div>
+            <button onClick={() => setIsEditing(true)} className="edit-button">
+              Edit Profile
+            </button>
+          </div>
         ) : (
-          <>
-            <h2>Hello, {user.name}</h2>
-            <p>Email: {user.email}</p>
-            <button onClick={() => setIsEditing(true)}>Edit</button>
-          </>
+          <form onSubmit={handleUpdate} className="edit-form">
+            <div className="form-group">
+              <label htmlFor="name">Name</label>
+              <input
+                id="name"
+                type="text"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+              />
+            </div>
+            <div className="form-actions">
+              <button type="submit" className="save-button">
+                Save Changes
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className="cancel-button"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
         )}
       </div>
 
