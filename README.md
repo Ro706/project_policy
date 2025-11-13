@@ -33,65 +33,6 @@ Project Policy is a web application that allows users to upload their policy doc
     *   Python (for Text-to-Speech)
     *   Python (for Gemini API)
 
-## Project Structure
-
-```
-.
-├── backend
-│   ├── db.js
-│   ├── docker.yaml
-│   ├── index.js
-│   ├── middleware
-│   │   ├── checkSubscription.js
-│   │   └── fetchalluser.js
-│   ├── models
-│   │   ├── ChatSession.js
-│   │   ├── Feedback.js
-│   │   ├── Payment.js
-│   │   ├── Summary.js
-│   │   └── User.js
-│   ├── python-tts
-│   │   ├── app.py
-│   │   └── requirements.txt
-│   └── routes
-│       ├── auth.js
-│       ├── chatbot.js
-│       ├── feedback.js
-│       ├── payment.js
-│       └── summary.js
-├── public
-│   └── vite.svg
-├── src
-│   ├── assets
-│   │   ├── chatbot-icon.svg
-│   │   └── Policy.png
-│   ├── components
-│   │   ├── AuthCard.jsx
-│   │   ├── Chatbot.css
-│   │   ├── Chatbot.jsx
-│   │   ├── Navbar.jsx
-│   │   ├── SummaryCard.jsx
-│   │   ├── SummaryModal.css
-│   │   └── SummaryModal.jsx
-│   ├── hooks
-│   │   └── useScript.js
-│   ├── pages
-│   │   ├── About.jsx
-│   │   ├── Account.jsx
-│   │   ├── Feedback.jsx
-│   │   ├── Home.jsx
-│   │   ├── Login.jsx
-│   │   ├── Pricing.jsx
-│   │   └── Signup.jsx
-│   ├── App.css
-│   ├── App.jsx
-│   ├── main.jsx
-│   └── ...
-├── .gitignore
-├── index.html
-├── package.json
-└── ...
-```
 
 ## Flow Diagram
 
