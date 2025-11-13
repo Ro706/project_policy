@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Chatbot.css';
 
 const Chatbot = ({ onClose }) => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     { text: "Hello! How can I help you with your policy today?", sender: 'bot' }
   ]);
@@ -18,6 +20,28 @@ const Chatbot = ({ onClose }) => {
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
+
+    // --- Subscription Check ---
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/payment/check-subscription", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": token,
+        },
+      });
+
+      if (!response.ok) {
+        navigate('/pricing');
+        return; // Stop execution if not subscribed
+      }
+    } catch (error) {
+      console.error("Subscription check error:", error);
+      // For now, we'll just log it and prevent sending the message.
+      return;
+    }
+    // --- End Subscription Check ---
 
     const userMessage = { text: input, sender: "user" };
     const userText = input;

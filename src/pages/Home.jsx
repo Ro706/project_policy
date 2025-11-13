@@ -383,7 +383,6 @@ const Home = () => {
         if (response.ok) {
           await performSubmit();
         } else {
-          alert("A subscription is required for this action. Redirecting to pricing page.");
           navigate('/pricing');
         }
       } catch (error) {
@@ -426,9 +425,7 @@ const Home = () => {
       if (response.ok) {
         performPlay();
       } else {
-        alert("A subscription is required to play audio. Redirecting to pricing page.");
-        navigate('/pricing');
-      }
+                  navigate('/pricing');      }
     } catch (error) {
       console.error("Subscription check error:", error);
       alert("Could not verify subscription status. Please try again.");

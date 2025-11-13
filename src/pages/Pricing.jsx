@@ -121,6 +121,7 @@ const Pricing = () => {
             <li>Summaries over 1000+ words</li>
             <li>Summaries in 10+ languages</li>
             <li>Text-to-Speech for all summaries</li>
+            <li>Chatbot access</li>
             <li>Priority customer support</li>
           </ul>
           <button className="subscribe-btn" onClick={() => handlePayment(49, 'Monthly Subscription')}>
@@ -137,6 +138,7 @@ const Pricing = () => {
             <li>Summaries over 1000+ words</li>
             <li>Summaries in 10+ languages</li>
             <li>Text-to-Speech for all summaries</li>
+            <li>Chatbot access</li>
             <li>Priority customer support</li>
           </ul>
           <button className="subscribe-btn" onClick={() => handlePayment(499, 'Yearly Subscription')}>
