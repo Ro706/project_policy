@@ -441,7 +441,7 @@ const Home = () => {
         {/* Header */}
         <div className="header">
           <div>
-            <h2>Policy Summarizer</h2>
+            <h2><b>Policy Summarizer</b></h2>
             <p>
               Upload a PDF and get a concise summary. Choose summary length,
               bullet format, or keep tone.

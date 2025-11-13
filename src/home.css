@@ -10,6 +10,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 50px;
   padding: 30px;
   min-height: 100vh;
 }
@@ -28,6 +29,11 @@ body {
   align-items: center;
   gap: 15px;
   margin-bottom: 30px;
+}
+
+.header h2 {
+  font-size: 1.8rem;
+  margin: 0;
 }
 
 .logo {
@@ -232,6 +238,7 @@ select {
 
 @media (max-width: 768px) {
   .summarizer-container {
+    margin-top: 250px;
     padding: 15px;
   }
   .summarizer-card {
