@@ -11,6 +11,11 @@ const UserSchema = new Schema({
         required: true,
         unique: true //Asking for user's email and it's required
     },
+    phone:{
+        type: String,
+        required: true,
+        unique: true //Asking for user's phone number and it's required
+    },
     password:{
         type: String,
         required: true //Asking for user's password and it's required (encrypted)

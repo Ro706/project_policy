@@ -7,7 +7,7 @@ const Account = () => {
   const [error, setError] = useState("");
   const [selectedSummary, setSelectedSummary] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "" });
   const [isSubscribed, setIsSubscribed] = useState(false);
 
   const checkSubscription = async () => {
@@ -47,7 +47,7 @@ const Account = () => {
 
       const data = await res.json();
       setUser(data);
-      setFormData({ name: data.name, email: data.email });
+      setFormData({ name: data.name, email: data.email, phone: data.phone });
     } catch (err) {
       console.error("❌ User fetch error:", err);
       setError(err.message);
@@ -188,6 +188,7 @@ const Account = () => {
         prefill: {
           name: user.name,
           email: user.email,
+          contact: user.phone,
         },
         notes: {
           address: "Razorpay Corporate Office",
@@ -227,6 +228,7 @@ const Account = () => {
             <div className="profile-info">
               <h2>{user.name}</h2>
               <p>{user.email}</p>
+              <p>{user.phone}</p>
             </div>
             <button onClick={() => setIsEditing(true)} className="edit-button">
               Edit Profile
@@ -253,6 +255,17 @@ const Account = () => {
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
+                }
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="phone">Phone</label>
+              <input
+                id="phone"
+                type="text"
+                value={formData.phone}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
                 }
               />
             </div>

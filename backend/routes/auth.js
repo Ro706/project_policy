@@ -12,6 +12,7 @@ router.post(
   [
     body('name').isString().notEmpty().withMessage('Name is required'),
     body('email').isEmail().withMessage('Invalid email address'),
+    body('phone').matches(/^\+?[0-9]{10,14}$/).withMessage('Please enter a valid phone number (10-14 digits).'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
   ],
   async (req, res) => {
@@ -22,10 +23,16 @@ router.post(
     }
 
     try {
-      const existingUser = await User.findOne({ email: req.body.email });
-      if (existingUser){
+      const existingUserWithEmail = await User.findOne({ email: req.body.email });
+      if (existingUserWithEmail){
         return res.status(400).json({ errors: [{ msg: 'User with this email already exists' }] });
       }
+
+      const existingUserWithPhone = await User.findOne({ phone: req.body.phone });
+      if (existingUserWithPhone){
+        return res.status(400).json({ errors: [{ msg: 'User with this phone number already exists' }] });
+      }
+
       // Hashing the password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(req.body.password, salt);
@@ -34,6 +41,7 @@ router.post(
       const user = await User.create({
         name: req.body.name,
         email: req.body.email,
+        phone: req.body.phone,
         password: hashedPassword,
       });
       //create a token
@@ -106,15 +114,37 @@ router.post("/getuser", fetchuser, async (req, res) => {
 
 
 // PUT /api/auth/updateuser
-router.put('/updateuser', fetchuser, async (req, res) => {
-  try {
-    const { name, email } = req.body;
-    const updatedUser = await User.findByIdAndUpdate(req.user.id, { name, email }, { new: true }).select('-password');
-    res.json({ success: true, user: updatedUser });
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send("Internal Server Error");
-  }
+router.put('/updateuser', fetchuser, [
+    body('name').isString().notEmpty().withMessage('Name is required'),
+    body('email').isEmail().withMessage('Invalid email address'),
+    body('phone').matches(/^\+?[0-9]{10,14}$/).withMessage('Please enter a valid phone number (10-14 digits).'),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+        const { name, email, phone } = req.body;
+
+        // Check if email is taken by another user
+        const existingUserWithEmail = await User.findOne({ email: email, _id: { $ne: req.user.id } });
+        if (existingUserWithEmail) {
+            return res.status(400).json({ errors: [{ msg: 'This email is already in use by another account' }] });
+        }
+
+        // Check if phone is taken by another user
+        const existingUserWithPhone = await User.findOne({ phone: phone, _id: { $ne: req.user.id } });
+        if (existingUserWithPhone) {
+            return res.status(400).json({ errors: [{ msg: 'This phone number is already in use by another account' }] });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(req.user.id, { name, email, phone }, { new: true }).select('-password');
+        res.json({ success: true, user: updatedUser });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Internal Server Error");
+    }
 });
 
 module.exports = router;

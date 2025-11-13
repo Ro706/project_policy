@@ -1,7 +1,33 @@
-import React from 'react';
+import React,{ useEffect, useState } from 'react';
 import '../pricing.css';
 
+
 const Pricing = () => {
+  const [user, setUser] = useState(null);
+
+  const getUser = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const res = await fetch("http://localhost:5000/api/auth/getuser", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": token,
+        },
+      }); 
+      if (!res.ok) throw new Error("Failed to fetch user details.");
+      const data = await res.json();
+      setUser(data);
+    } catch (err) {
+      console.error("❌ User fetch error:", err);
+    }
+  };
+
+  useEffect(() => {
+    getUser();
+  }, []);
+
   // In a real app, this would be moved to a shared hook or context
   const handlePayment = async (amount, description) => {
     // This logic is copied from Home.jsx and should be refactored in a real-world scenario
@@ -60,9 +86,9 @@ const Pricing = () => {
           }
         },
         prefill: {
-          name: "User Name",
-          email: "user@example.com",
-          contact: "9999999999",
+          name: user ? user.name : "User",
+          email: user ? user.email : "user@example.com",
+          contact: user ? user.contact : "9999999999",
         },
         notes: {
           address: "Razorpay Corporate Office",
@@ -90,14 +116,14 @@ const Pricing = () => {
         {/* Monthly Plan Card */}
         <div className="plan-card">
           <h2>Monthly</h2>
-          <p className="price">₹99<span>/month</span></p>
+          <p className="price">₹49<span>/month</span></p>
           <ul className="features">
             <li>Summaries over 1000+ words</li>
             <li>Summaries in 10+ languages</li>
             <li>Text-to-Speech for all summaries</li>
             <li>Priority customer support</li>
           </ul>
-          <button className="subscribe-btn" onClick={() => handlePayment(99, 'Monthly Subscription')}>
+          <button className="subscribe-btn" onClick={() => handlePayment(49, 'Monthly Subscription')}>
             Choose Plan
           </button>
         </div>
@@ -106,14 +132,14 @@ const Pricing = () => {
         <div className="plan-card popular">
           <span className="popular-badge">Most Popular</span>
           <h2>Yearly</h2>
-          <p className="price">₹999<span>/year</span></p>
+          <p className="price">₹499<span>/year</span></p>
           <ul className="features">
             <li>Summaries over 1000+ words</li>
             <li>Summaries in 10+ languages</li>
             <li>Text-to-Speech for all summaries</li>
             <li>Priority customer support</li>
           </ul>
-          <button className="subscribe-btn" onClick={() => handlePayment(999, 'Yearly Subscription')}>
+          <button className="subscribe-btn" onClick={() => handlePayment(499, 'Yearly Subscription')}>
             Choose Plan
           </button>
         </div>

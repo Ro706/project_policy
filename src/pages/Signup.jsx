@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "../auth.css";
 
 const Signup = () => {
-  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", password: "", phone: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -54,7 +54,17 @@ const Signup = () => {
             required
           />
         </div>
-
+        <div>
+          <label>Phone</label>
+          <input
+            type="text"
+            name="phone"
+            placeholder="Your phone number"
+            value={formData.phone}
+            onChange={handleChange}
+            required
+          />
+        </div>
         <div>
           <label>Password</label>
           <input
