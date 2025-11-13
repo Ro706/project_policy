@@ -1,0 +1,139 @@
+.pricing-container {
+  padding: 4rem 2rem;
+  background-color: #121212; /* Dark background */
+  color: #f0f0f0;
+  min-height: calc(100vh - 80px); /* Adjust for navbar height */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.pricing-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.pricing-header h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.pricing-header p {
+  font-size: 1.2rem;
+  color: #aaa;
+  max-width: 600px;
+}
+
+.pricing-cards {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.plan-card {
+  background-color: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 15px;
+  padding: 2.5rem;
+  width: 350px;
+  min-height: 450px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+}
+
+.plan-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0, 123, 255, 0.2);
+}
+
+.plan-card.popular {
+  border-color: #007bff;
+  box-shadow: 0 0 25px rgba(0, 123, 255, 0.3);
+}
+
+.popular-badge {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #007bff;
+  color: white;
+  padding: 0.5rem 1.2rem;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.plan-card h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.price {
+  font-size: 3.5rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.price span {
+  font-size: 1rem;
+  font-weight: normal;
+  color: #aaa;
+  margin-left: 0.5rem;
+}
+
+.features {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 2.5rem;
+  text-align: left;
+}
+
+.features li {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+}
+
+.features li::before {
+  content: '✔';
+  color: #007bff;
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.subscribe-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  margin-top: auto; /* Pushes button to the bottom */
+}
+
+.subscribe-btn:hover {
+  background-color: #0056b3;
+  transform: scale(1.02);
+}
+
+.plan-card.popular .subscribe-btn {
+    background-color: #0056b3;
+}
+
+.plan-card.popular .subscribe-btn:hover {
+    background-color: #004494;
+}

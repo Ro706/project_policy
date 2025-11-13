@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "../home.css";
 import jsPDF from 'jspdf';
+import useScript from "../hooks/useScript";
 
 const Home = () => {
   const [file, setFile] = useState(null);
@@ -18,6 +20,9 @@ const Home = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState(null);
   
+  const navigate = useNavigate();
+  const razorpayScriptStatus = useScript('https://checkout.razorpay.com/v1/checkout.js');
+
   // Language configuration with ISO codes and native names
   const languageConfig = {
     English: { code: 'en-US', nativeName: 'English', translateCode: 'en' },
@@ -164,6 +169,11 @@ const Home = () => {
   };
 
   const handlePayment = async (onSuccess) => {
+    if (razorpayScriptStatus !== 'ready') {
+      alert('Payment gateway is loading. Please try again in a moment.');
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       const orderUrl = "http://localhost:5000/api/payment/create-order";
@@ -258,7 +268,7 @@ const Home = () => {
         formData.append("language", language);
 
         const response = await fetch(
-          "http://localhost:5678/webhook-test/7104db72-dd00-413f-8132-fddf6a0f4bf7",
+          "http://localhost:5678/webhook-test/6d3ce1cb-025a-4cd8-808a-d2a804aea741",
           {
             method: "POST",
             body: formData,
@@ -272,23 +282,51 @@ const Home = () => {
         }
   
         const contentType = response.headers.get("content-type");
-        let data;
+        let summaryText = "";
+
         if (contentType && contentType.includes("application/json")) {
           const json = await response.json();
-          data = json.output || JSON.stringify(json, null, 2);
+          // The user specified the format is: [{ useroutput: "...", chatbot: "..." }]
+          if (Array.isArray(json) && json.length > 0 && json[0].useroutput) {
+            summaryText = json[0].useroutput;
+          } else {
+            // Fallback for unexpected JSON structure
+            summaryText = JSON.stringify(json, null, 2);
+          }
         } else {
-          data = await response.text();
+          summaryText = await response.text();
         }
   
-        const summaryText = data.trim() || "✅ Summary generated successfully.";
+        summaryText = summaryText.trim() || "✅ Summary generated successfully.";
         setSummary(summaryText);
+
+        // --- NEW: Save the summary as the context for the chatbot ---
+        try {
+          const token = localStorage.getItem("token");
+          await fetch("http://localhost:5000/api/chatbot/session", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "auth-token": token,
+            },
+            body: JSON.stringify({ context: summaryText }),
+          });
+          console.log("Chatbot context updated successfully.");
+        } catch (error) {
+          console.error("Error updating chatbot context:", error);
+        }
+
+        // --- FIX for 9-minute audio delay ---
+        // Only send a short snippet of the summary to the TTS service to prevent timeouts.
+        const ttsSnippet = summaryText.substring(0, 250); // Send first 250 chars for audio
+        console.log("Sending truncated snippet to TTS service:", ttsSnippet);
 
         try {
           const ttsResponse = await fetch("http://localhost:5001/api/tts", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              text: summaryText,
+              text: ttsSnippet, // Use the short snippet
               lang: languageConfig[language].translateCode,
             }),
           });
@@ -299,6 +337,7 @@ const Home = () => {
           console.error("Error pre-fetching audio:", error);
         }
 
+        // Save the FULL summary to the database
         try {
           const token = localStorage.getItem("token");
           await fetch("http://localhost:5000/api/summary/add", {
@@ -328,24 +367,32 @@ const Home = () => {
       }
     };
 
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/payment/check-subscription", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": token,
-        },
-      });
+    const needsSubscription = wordLimit >= 1000 || (language && language !== 'English' && language !== 'Hindi');
 
-      if (response.ok) {
-        await performSubmit();
-      } else {
-        await handlePayment(performSubmit);
+    if (needsSubscription) {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:5000/api/payment/check-subscription", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": token,
+          },
+        });
+
+        if (response.ok) {
+          await performSubmit();
+        } else {
+          alert("A subscription is required for this action. Redirecting to pricing page.");
+          navigate('/pricing');
+        }
+      } catch (error) {
+        console.error("Subscription check error:", error);
+        alert("Could not verify subscription status. Please try again.");
       }
-    } catch (error) {
-      console.error("Subscription check error:", error);
-      alert("Could not verify subscription status. Please try again.");
+    } else {
+      // No subscription needed, proceed directly
+      await performSubmit();
     }
   };
 
@@ -379,7 +426,8 @@ const Home = () => {
       if (response.ok) {
         performPlay();
       } else {
-        await handlePayment(performPlay);
+        alert("A subscription is required to play audio. Redirecting to pricing page.");
+        navigate('/pricing');
       }
     } catch (error) {
       console.error("Subscription check error:", error);

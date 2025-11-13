@@ -1,0 +1,215 @@
+/* Professional Dark Theme for Chatbot */
+
+:root {
+  --chatbot-bg: #1a1a1a;
+  --header-bg: #2a2a2a;
+  --user-msg-bg: #007bff;
+  --bot-msg-bg: #333333;
+  --text-color: #f0f0f0;
+  --input-bg: #2c2c2c;
+  --border-color: #444;
+  --icon-bg: #007bff;
+  --icon-color: #ffffff;
+}
+
+.chatbot-icon {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 60px; /* Keep width/height for clickable area */
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: white; /* Set icon color to white */
+  /* Removed box-shadow */
+  transition: all 0.3s ease;
+  z-index: 999;
+}
+
+.chatbot-icon:hover {
+  transform: scale(1.1);
+  /* Removed box-shadow */
+}
+
+.chatbot-icon img {
+  width: 32px;
+  height: 32px;
+  transition: transform 0.3s ease;
+  /* Removed rotation on hover */
+}
+
+.chatbot-icon:hover img {
+  /* transform: rotate(15deg); */ /* Removed for professional look */
+}
+
+
+.chatbot-popup {
+  position: fixed;
+  bottom: calc(2rem + 80px); /* Position above the icon */
+  right: 2rem;
+  width: 370px;
+  max-height: 600px;
+  height: 70vh;
+  background-color: var(--chatbot-bg);
+  color: var(--text-color);
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000;
+  border: 1px solid var(--border-color);
+  animation: slide-up 0.4s ease-out;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.chatbot-header {
+  background-color: var(--header-bg);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  user-select: none;
+}
+
+.chatbot-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  font-size: 2rem;
+  cursor: pointer;
+  transition: color 0.2s, transform 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #ff4d4d;
+  transform: scale(1.1);
+}
+
+.chat-messages {
+  flex-grow: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Custom scrollbar for dark theme */
+.chat-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: var(--chatbot-bg);
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 10px;
+  border: 2px solid var(--chatbot-bg);
+}
+
+.message {
+  padding: 0.75rem 1.25rem;
+  border-radius: 18px;
+  max-width: 85%;
+  word-wrap: break-word;
+  line-height: 1.5;
+  animation: fade-in 0.5s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message.user {
+  background-color: var(--user-msg-bg);
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.message.bot {
+  background-color: var(--bot-msg-bg);
+  color: var(--text-color);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.chat-input {
+  display: flex;
+  padding: 1rem;
+  align-items: center;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--header-bg);
+}
+
+.chat-input input {
+  flex-grow: 1;
+  border: 1px solid var(--border-color);
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  border-radius: 20px;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chat-input input::placeholder {
+  color: #888;
+}
+
+.chat-input input:focus {
+  border-color: var(--user-msg-bg);
+}
+
+.chat-input button {
+  background-color: var(--user-msg-bg);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  margin-left: 0.75rem;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.chat-input button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.chat-input button:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}

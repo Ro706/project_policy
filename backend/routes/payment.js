@@ -75,8 +75,38 @@ router.post('/verify-payment', fetchalluser, async (req, res) => {
 });
 
 // ROUTE 3: Check subscription status: GET "/api/payment/check-subscription". Login required
-router.get('/check-subscription', fetchalluser, checkSubscription, (req, res) => {
-    res.json({ status: 'subscribed' });
+router.get('/check-subscription', fetchalluser, async (req, res) => {
+    // Development-only bypass for easier testing
+    if (process.env.NODE_ENV === 'development') {
+        console.log('DEV MODE: Bypassing subscription check for /api/payment/check-subscription');
+        return res.json({ status: 'subscribed' });
+    }
+
+    // Production logic (same as the original checkSubscription middleware)
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).send("User not found");
+        }
+
+        if (user.isSubscribed) {
+            const now = new Date();
+            if (user.subscriptionExpiresAt < now) {
+                // Subscription has expired
+                user.isSubscribed = false;
+                await user.save();
+                return res.status(402).json({ error: "Subscription expired. Please pay to renew." });
+            } else {
+                // User is subscribed
+                return res.json({ status: 'subscribed' });
+            }
+        } else {
+            return res.status(402).json({ error: "You need to be subscribed to access this feature." });
+        }
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Internal Server Error");
+    }
 });
 
 // ROUTE 4: Get Razorpay key: GET "/api/payment/get-key". Login required

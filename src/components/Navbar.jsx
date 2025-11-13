@@ -38,6 +38,7 @@ const Navbar = () => {
         <div className="nav-links">
           <NavLink to="/" className="nav-link">Home</NavLink>
           <NavLink to="/about" className="nav-link">About</NavLink>
+          <NavLink to="/pricing" className="nav-link">Pricing</NavLink>
           <NavLink to="/feedback" className="nav-link">Feedback</NavLink>
         </div>
       </div>
@@ -61,6 +62,7 @@ const Navbar = () => {
           <div className="separator"></div>
           <NavLink to="/" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Home</NavLink>
           <NavLink to="/about" className="nav-link" onClick={() => setMobileMenuOpen(false)}>About</NavLink>
+          <NavLink to="/pricing" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Pricing</NavLink>
           <NavLink to="/feedback" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Feedback</NavLink>
           <div className="separator"></div>
           <Link to="/account" className="mobile-user-info" onClick={() => setMobileMenuOpen(false)}>

@@ -1,13 +1,36 @@
 const express = require("express");
 const router = express.Router();
 const fetchuser = require("../middleware/fetchalluser");
-const checkSubscription = require("../middleware/checkSubscription");
 const Summary = require("../models/Summary");
+const User = require("../models/User");
 
 // Add summary
-router.post("/add", fetchuser, checkSubscription, async (req, res) => {
+router.post("/add", fetchuser, async (req, res) => {
   try {
     const { summaryText, wordLimit, language } = req.body;
+
+    const wordCount = summaryText ? summaryText.split(/\s+/).filter(Boolean).length : 0;
+    const needsSubscription = wordCount >= 1000 || (language && language.toLowerCase() !== 'hindi' && language.toLowerCase() !== 'english');
+
+    if (needsSubscription) {
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).send("User not found");
+      }
+
+      if (user.isSubscribed) {
+        const now = new Date();
+        if (user.subscriptionExpiresAt < now) {
+          // Subscription has expired
+          user.isSubscribed = false;
+          await user.save();
+          return res.status(402).json({ error: "Subscription expired. Please pay to renew." });
+        }
+      } else {
+        return res.status(402).json({ error: "A subscription is required for summaries over 1000 words or for languages other than English and Hindi." });
+      }
+    }
+
     const newSummary = new Summary({
       user: req.user.id,
       summaryText,
@@ -23,7 +46,7 @@ router.post("/add", fetchuser, checkSubscription, async (req, res) => {
 });
 
 // Get all summaries of logged-in user
-router.get("/getall", fetchuser, checkSubscription, async (req, res) => {
+router.get("/getall", fetchuser, async (req, res) => {
   const summaries = await Summary.find({ user: req.user.id });
   res.json(summaries);
 });
