@@ -79,6 +79,46 @@ The application provides a Text-to-Speech feature that converts generated summar
     *   **Python TTS Service:** A simple Flask-based service for converting text to speech.
     *   **External Summarization Service:** A webhook-based service that handles the core PDF parsing and summarization.
 
+## Flow Diagram
+
+```mermaid
+graph TD
+    A[User] --> B{Frontend};
+    B --> C{Backend API};
+    C --> D[Database];
+    C --> E{Payment Gateway};
+    C --> F{Chatbot Service};
+    F --> G[Gemini API];
+    C --> H{Text-to-Speech Service};
+
+    subgraph Frontend
+        B1[React UI]
+        B2[React Router]
+    end
+
+    subgraph Backend
+        C1[Express Server]
+        C2[API Routes]
+    end
+
+    subgraph Database
+        D1[MongoDB]
+    end
+
+    subgraph External Services
+        E[Razorpay]
+        G[Gemini API]
+    end
+
+    B -- /api --> C;
+    C -- CRUD --> D;
+    C -- /api/payment --> E;
+    C -- /api/chatbot --> F;
+    F -- /api/gemini --> G;
+    C -- /api/tts --> H;
+```
+
+
 ## Getting Started
 
 ### Prerequisites
