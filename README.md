@@ -174,3 +174,7 @@ graph TD
     ```
 
 The application will be available at `http://localhost:5173`.
+
+
+## n8n Agent :
+<img width="1612" height="670" alt="image" src="https://github.com/user-attachments/assets/9b8c830f-823d-4aa3-95e8-1127a3944ed9" />
