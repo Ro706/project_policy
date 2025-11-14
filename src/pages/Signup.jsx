@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import AuthCard from "../components/AuthCard";
 import { useNavigate } from "react-router-dom";
 import "../auth.css";
+import { UserContext } from "../context/UserContext";
 
 const Signup = () => {
   const [formData, setFormData] = useState({ name: "", email: "", password: "", phone: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useContext(UserContext);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,7 +24,8 @@ const Signup = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Signup failed");
-      navigate("/login");
+      login(data.authToken);
+      navigate("/");
     } catch (err) {
       setError(err.message);
     }

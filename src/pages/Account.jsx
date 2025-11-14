@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import SummaryModal from "../components/SummaryModal";
 import SummaryCard from "../components/SummaryCard";
+import { UserContext } from "../context/UserContext";
+
 const Account = () => {
-  const [user, setUser] = useState(null);
+  const { user, token } = useContext(UserContext);
   const [summaries, setSummaries] = useState([]);
   const [error, setError] = useState("");
   const [selectedSummary, setSelectedSummary] = useState(null);
@@ -10,9 +12,14 @@ const Account = () => {
   const [formData, setFormData] = useState({ name: "", email: "", phone: "" });
   const [isSubscribed, setIsSubscribed] = useState(false);
 
+  useEffect(() => {
+    if (user) {
+      setFormData({ name: user.name, email: user.email, phone: user.phone });
+    }
+  }, [user]);
+
   const checkSubscription = async () => {
     try {
-      const token = localStorage.getItem("token");
       if (!token) return;
 
       const res = await fetch("http://localhost:5000/api/payment/check-subscription", {
@@ -30,33 +37,8 @@ const Account = () => {
     }
   };
 
-  const getUser = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found, please log in again.");
-
-      const res = await fetch("http://localhost:5000/api/auth/getuser", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": token,
-        },
-      });
-
-      if (!res.ok) throw new Error("Failed to fetch user details.");
-
-      const data = await res.json();
-      setUser(data);
-      setFormData({ name: data.name, email: data.email, phone: data.phone });
-    } catch (err) {
-      console.error("❌ User fetch error:", err);
-      setError(err.message);
-    }
-  };
-
   const getSummaries = async () => {
     try {
-      const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found, please log in again.");
 
       const res = await fetch("http://localhost:5000/api/summary/getall", {
@@ -74,15 +56,15 @@ const Account = () => {
   };
 
   useEffect(() => {
-    getUser();
-    getSummaries();
-    checkSubscription();
-  }, []);
+    if (token) {
+      getSummaries();
+      checkSubscription();
+    }
+  }, [token]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
       const res = await fetch("http://localhost:5000/api/auth/updateuser", {
         method: "PUT",
         headers: {
@@ -95,7 +77,7 @@ const Account = () => {
       if (!res.ok) throw new Error("Failed to update user.");
 
       const data = await res.json();
-      setUser(data.user);
+      // The user state will be updated through the context, no need to setUser here
       setIsEditing(false);
     } catch (err) {
       console.error("❌ User update error:", err);
@@ -105,7 +87,6 @@ const Account = () => {
 
   const handleDelete = async (id) => {
     try {
-      const token = localStorage.getItem("token");
       const res = await fetch(`http://localhost:5000/api/summary/delete/${id}`, {
         method: "DELETE",
         headers: {
@@ -132,7 +113,6 @@ const Account = () => {
 
   const handlePayment = async () => {
     try {
-      const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found, please log in again.");
 
       const keyRes = await fetch("http://localhost:5000/api/payment/get-key", {

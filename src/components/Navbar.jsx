@@ -1,33 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate, NavLink, Link } from "react-router-dom";
 import "../navbar.css";
 import logo from "../assets/Policy.png";
+import { UserContext } from "../context/UserContext";
 
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [userName, setUserName] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:5000/api/auth/getuser", {
-          method: "POST",
-          headers: { "auth-token": token },
-        });
-        const data = await res.json();
-        if (data?.name) setUserName(data.name);
-      } catch {
-        setUserName("User");
-      }
-    };
-    fetchUser();
-  }, []);
+  const { user, logout } = useContext(UserContext);
+  const userName = user ? user.name : "User";
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    logout();
     navigate("/login");
   };
 
@@ -44,7 +29,7 @@ const Navbar = () => {
       </div>
       <div className="user-menu" onClick={() => setDropdownOpen(!dropdownOpen)}>
         <img src={`https://ui-avatars.com/api/?name=${userName}&background=random`} alt="avatar" className="avatar" />
-        <span className="user-name">Hello, {userName || "User"}</span>
+        <span className="user-name">Hello, {userName}</span>
         {dropdownOpen && (
           <div className="dropdown">
             <button onClick={() => navigate("/account")}>Account</button>
@@ -67,7 +52,7 @@ const Navbar = () => {
           <div className="separator"></div>
           <Link to="/account" className="mobile-user-info" onClick={() => setMobileMenuOpen(false)}>
             <img src={`https://ui-avatars.com/api/?name=${userName}&background=random`} alt="avatar" className="avatar" />
-            <span>{userName || "User"}</span>
+            <span>{userName}</span>
           </Link>
           <div className="separator"></div>
           <button className="logout-btn" onClick={() => {handleLogout(); setMobileMenuOpen(false);}}>Logout</button>
