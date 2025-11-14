@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "preview": "vite preview",
-    "dev": "vite"
+    "dev": "vite --host 0.0.0.0"
   },
   "dependencies": {
     "jspdf": "^3.0.3",
