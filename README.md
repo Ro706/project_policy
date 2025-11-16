@@ -2,6 +2,7 @@
 
 Project Policy is a web application that allows users to upload their policy documents, get a concise summary, and ask follow-up questions using an interactive chatbot. It includes a subscription model for premium features, multi-language support, and text-to-speech capabilities.
 
+
 ## Core Features
 
 *   **Document Summarization:** Users can upload a PDF document. The system sends the document to a specialized external service that generates a summary based on the user's desired length (e.g., 200, 700, 1000 words).
@@ -16,6 +17,7 @@ Project Policy is a web application that allows users to upload their policy doc
         *   Full access to the interactive chatbot.
 *   **User Account Management:** Users can sign up, log in, and manage their account details, including name, email, and phone number.
 
+*   **Email OTP Verification:** To enhance security, all new user accounts now require email verification. An OTP (One-Time Password) is sent to the user's registered email address during the signup process. Users must verify their email with the OTP before they can log in.
 ## Architecture & Performance
 
 This section addresses how the application is structured to handle its tasks efficiently.
