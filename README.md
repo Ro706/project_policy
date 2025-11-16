@@ -1,4 +1,4 @@
-# Project Summary Policy 
+# Project Policy Summary
 
 Project Policy is a web application that allows users to upload their policy documents, get a concise summary, and ask follow-up questions using an interactive chatbot. It includes a subscription model for premium features, multi-language support, and text-to-speech capabilities.
 
