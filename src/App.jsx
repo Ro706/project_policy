@@ -13,6 +13,7 @@ import chatbotIcon from "./assets/chatbot-icon.svg";
 import { Navigate } from "react-router-dom";
 import "./account.css";
 import "./components/Chatbot.css";
+import VerifyOtp from "./pages/VerifyOtp";
 
 const ProtectedRoute = ({ element }) => {
   const isAuthenticated = localStorage.getItem("token");
@@ -37,6 +38,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
       </Routes>
       {!isChatOpen ? (
         <img

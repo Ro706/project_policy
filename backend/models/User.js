@@ -24,6 +24,16 @@ const UserSchema = new Schema({
         type: Date,
         default: Date.now //creation date (current date)
     },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    otp: {
+        type: String
+    },
+    otpExpires: {
+        type: Date
+    },
     isSubscribed: {
         type: Boolean,
         default: false

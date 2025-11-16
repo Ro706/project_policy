@@ -23,9 +23,10 @@ const Signup = () => {
         body: JSON.stringify(formData),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Signup failed");
-      login(data.authToken);
-      navigate("/");
+      if (!res.ok) {
+        throw new Error(data.errors ? data.errors[0].msg : "Signup failed");
+      }
+      navigate("/verify-otp", { state: { email: formData.email } });
     } catch (err) {
       setError(err.message);
     }
