@@ -268,7 +268,7 @@ const Home = () => {
         formData.append("language", language);
 
         const response = await fetch(
-          "http://localhost:5678/webhook-test/6d3ce1cb-025a-4cd8-808a-d2a804aea741",
+          "http://localhost:5678/webhook/6d3ce1cb-025a-4cd8-808a-d2a804aea741",
           {
             method: "POST",
             body: formData,
