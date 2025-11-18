@@ -1,6 +1,7 @@
 .pricing-container {
+  margin-top: 180px;
   padding: 4rem 2rem;
-  background-color: #121212; /* Dark background */
+  /* background-color: 181c2e; Dark background */
   color: #f0f0f0;
   min-height: calc(100vh - 80px); /* Adjust for navbar height */
   display: flex;

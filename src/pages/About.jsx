@@ -35,7 +35,8 @@ const features = [
 
 const styles = {
   page: {
-    background: 'linear-gradient(180deg, #0f1724 0%, #081027 100%)',
+    marginTop: 200,
+    // background: 'linear-gradient(180deg, #0f1724 0%, #081027 100%)',
     color: '#E6EEF8',
     minHeight: '100vh',
     padding: '48px 20px',
@@ -53,6 +54,7 @@ const styles = {
   },
   title: {
     fontSize: 36,
+    fontWeight: 700,
     lineHeight: 1.05,
     margin: 0,
     color: '#FFFFFF'

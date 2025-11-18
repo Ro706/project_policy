@@ -53,7 +53,7 @@ const Feedback = () => {
             onChange={(e) => setExperience(e.target.value)}
             required
           >
-            <option value="">-- Select an option --</option>
+            <option value="">Select an option</option>
             <option value="Excellent">Excellent</option>
             <option value="Good">Good</option>
             <option value="Average">Average</option>
