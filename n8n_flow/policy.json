@@ -1,22 +1,22 @@
 {
-  "name": "policy2.0",
+  "name": "policy3.0",
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "6d3ce1cb-025a-4cd8-808a-d2a804aea741",
+        "path": "8e4885d1-670f-4fad-9e45-4022f25d3fd7",
         "responseMode": "responseNode",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -304,
-        -32
+        -96,
+        -432
       ],
-      "id": "3152cf6f-9c97-439f-bd6f-edfafd02bcfe",
+      "id": "eb462e9b-e237-4bb2-a58b-cca780b8ba12",
       "name": "Webhook",
-      "webhookId": "6d3ce1cb-025a-4cd8-808a-d2a804aea741"
+      "webhookId": "8e4885d1-670f-4fad-9e45-4022f25d3fd7"
     },
     {
       "parameters": {
@@ -27,26 +27,11 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [
-        -96,
-        -32
+        96,
+        -432
       ],
-      "id": "a5a1301e-691d-4f19-9f0b-b1b2dbe63307",
+      "id": "f1b590a5-f4f9-405a-b8fa-55fa6950f4b1",
       "name": "Extract from File"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=You are an expert multilingual document summarizer.  \nYour task is to summarize the provided PDF text in approximately {{ $('Webhook').item.json.body.wordLimit }} words.  \n\nThe user has selected the target output language: {{ $('Webhook').item.json.body.language }}.  \nGenerate the summary **strictly in that language**, ensuring the grammar and vocabulary are natural and fluent for native readers.  \n\nFocus your summary on:\n- The **main ideas** and **core arguments** of the document  \n- Key **facts**, **figures**, and **findings**  \n- Notable **exclusions** or **limitations** mentioned  \n- Avoiding unnecessary filler, repetition, or speculative commentary  \n\nText to summarize:\n{{ $json.text }}\n",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 2.2,
-      "position": [
-        192,
-        -240
-      ],
-      "id": "4aaf7d67-26c6-4807-8625-567c3b81f040",
-      "name": "AI Agent"
     },
     {
       "parameters": {
@@ -55,55 +40,34 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        160,
-        -48
+        688,
+        208
       ],
-      "id": "c25b8b5e-14c6-47fc-8825-c3b9381809ab",
+      "id": "5fe87a22-d3c1-4170-80cb-49da542a1623",
       "name": "Google Gemini Chat Model",
       "credentials": {
         "googlePalmApi": {
-          "id": "Gdu1GmJvatAyagkm",
-          "name": "Google Gemini(PaLM) Api account"
+          "id": "e22jCIWd7CgStM5t",
+          "name": "Google Gemini(PaLM) Api account 3"
         }
       }
     },
     {
       "parameters": {
-        "promptType": "define",
-        "text": "=You are an expert multilingual document summarizer designed for high-accuracy comprehension of long PDF texts.\nYour job is to produce a clear, complete, and deeply detailed summary based strictly on the user-provided content.\n\nThe user has selected the output language: English.\nYou must write the summary only in English, with fluent, natural, native-level grammar and vocabulary.\n\nYour summary should be 1000 words and include:\n\nThe main themes, arguments, and central ideas\n\nKey facts, figures, statistics, results, and conclusions\n\nAny limitations, constraints, or assumptions mentioned\n\nImportant methods, models, frameworks, or processes\n\nNo filler, no repetition, no personal opinions, and no speculative content\n\nSummaries must remain faithful to the original document\n\nUser content to summarize:\n\n{{ $json.text }}\n\n\nRequired Output Format:\n\nchatoutput",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 2.2,
-      "position": [
-        192,
-        112
-      ],
-      "id": "70a51e0e-0642-434f-9e0b-33f64a43b542",
-      "name": "AI Agent1",
-      "retryOnFail": true,
-      "waitBetweenTries": 3000,
-      "notesInFlow": false,
-      "executeOnce": false,
-      "alwaysOutputData": false,
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        16,
-        224
+        272,
+        -256
       ],
-      "id": "71a45319-03b3-4222-955b-1ee0da3b4f87",
+      "id": "6e36a277-c19c-46b8-b48d-4653e84ba95b",
       "name": "Google Gemini Chat Model1",
       "credentials": {
         "googlePalmApi": {
-          "id": "ELwaqUozyhRtv879",
-          "name": "Google Gemini(PaLM) Api account 2"
+          "id": "Gdu1GmJvatAyagkm",
+          "name": "Google Gemini(PaLM) Api account"
         }
       }
     },
@@ -115,10 +79,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        800,
-        -64
+        1328,
+        -144
       ],
-      "id": "40583820-5051-42b2-843c-3129dfa776f3",
+      "id": "e2441fb3-6cd0-4b41-8f2b-de453ae19c84",
       "name": "Respond to Webhook"
     },
     {
@@ -138,10 +102,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        544,
+        928,
         -240
       ],
-      "id": "f758ba2e-4a4e-41dc-bc5b-176450d9cfe4",
+      "id": "bcdb3b8d-631e-4a52-aaf5-7daba62a88b1",
       "name": "Edit Fields"
     },
     {
@@ -161,10 +125,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        544,
-        112
+        656,
+        -432
       ],
-      "id": "f86a9422-f8d1-4b26-b055-593ddff2760a",
+      "id": "31c4a4d3-4f2e-49ab-a137-d7b125481772",
       "name": "Edit Fields1"
     },
     {
@@ -172,11 +136,211 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        656,
+        1184,
+        -400
+      ],
+      "id": "93481084-94bf-41a4-a532-c8116f5df1ed",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert multilingual document-summarization agent.  \nYour task is to summarize the extracted chunk of PDF text provided to you.  \n\nFollow these rules:\n\n1. Summarize the content in **approximately {{ $('Webhook').item.json.body.wordLimit }} words**.  \n2. Produce the summary **strictly in the language specified**:\n   → {{ $('Webhook').item.json.body.language }}\n3. Focus only on the information that appears in the given text chunk.  \n4. Extract and emphasize:\n   - Main ideas and core arguments\n   - Key facts, data points, and findings\n   - Important limitations, disclaimers, or missing information\n5. Avoid:\n   - Repetition\n   - Guessing missing context\n   - Adding your own opinions\n   - Filler text\n\nText to summarize:\n{{ $('AI Agent1').item.json.output }}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        48
+      ],
+      "id": "6fa8af1c-1637-4347-adf1-77ddcf9a1f71",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert multilingual document-summarization agent.  \nYour task is to summarize the extracted chunk of PDF text provided to you.  \n\nFollow these rules:\n\n1. Summarize the content in **approximately 20 words**.  \n2. Produce the summary **strictly in the language specified**:\n   → English\n3. Focus only on the information that appears in the given text chunk.  \n4. Extract and emphasize:\n   - Main ideas and core arguments\n   - Key facts, data points, and findings\n   - Important limitations, disclaimers, or missing information\n5. Avoid:\n   - Repetition\n   - Guessing missing context\n   - Adding your own opinions\n   - Filler text\n\nText to summarize:\n{{ $json.text }}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        -432
+      ],
+      "id": "e03fc1f5-e2ce-44e1-b716-ac71cd7054ad",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ddb23bcd-3430-49b8-9f62-3a7fde112886",
+              "leftValue": "2000",
+              "rightValue": "={{ $('Webhook').item.json.body.wordLimit }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "d130fc2d-3b25-4003-8a7b-908ab66ec51e",
+              "leftValue": "English",
+              "rightValue": "={{ $('Webhook').item.json.body.language }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        32
+      ],
+      "id": "c36a42a6-d803-4852-b337-a9c54ba003b8",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger + File text extract",
+        "height": 208,
+        "width": 560
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -336,
+        -480
+      ],
+      "typeVersion": 1,
+      "id": "efb740f8-fc06-49fe-82cc-1a5716bb5d90",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Main Process Area",
+        "height": 816,
+        "width": 880,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        224,
+        -480
+      ],
+      "typeVersion": 1,
+      "id": "77b6d3a3-0db3-4446-9da3-61ca8da403c9",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Merging two responses",
+        "height": 240,
+        "width": 416,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1104,
+        -480
+      ],
+      "typeVersion": 1,
+      "id": "24a60cd8-c119-4385-b6df-bfed70bdb086",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Response Webhook:\n\nTo send back the response",
+        "height": 224,
+        "width": 416
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1104,
+        -240
+      ],
+      "typeVersion": 1,
+      "id": "033959f5-2d4b-4356-aaef-e0a69d70c951",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Rename the response ",
+        "height": 224,
+        "width": 272,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        -480
+      ],
+      "typeVersion": 1,
+      "id": "3e4c0efa-24e8-4594-aaeb-4cac8bac1c00",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Rename the response ",
+        "height": 224,
+        "width": 272,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        832,
+        -288
+      ],
+      "typeVersion": 1,
+      "id": "86240f62-a8c3-4e8f-9b93-ff89691acac4",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## IF Condition\nif condition to check weather data require is same or different by which we can save processing power",
+        "height": 224,
+        "width": 336,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        256,
         -64
       ],
-      "id": "7c931fc7-c94e-4eaa-850d-71eec4e21c27",
-      "name": "Merge"
+      "typeVersion": 1,
+      "id": "f26e65cf-a19b-4f7d-ab39-c3a248360fa5",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "# Work Space",
+        "height": 896,
+        "width": 1888,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -352,
+        -560
+      ],
+      "typeVersion": 1,
+      "id": "c7617a26-de1d-4510-81a4-5ddf6e6fbfb7",
+      "name": "Sticky Note7"
     }
   ],
   "pinData": {},
@@ -196,11 +360,6 @@
       "main": [
         [
           {
-            "node": "AI Agent",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "AI Agent1",
             "type": "main",
             "index": 0
@@ -219,17 +378,6 @@
         ]
       ]
     },
-    "AI Agent": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Google Gemini Chat Model1": {
       "ai_languageModel": [
         [
@@ -241,25 +389,13 @@
         ]
       ]
     },
-    "AI Agent1": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields1",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
     "Edit Fields": {
       "main": [
         [
           {
             "node": "Merge",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -270,7 +406,7 @@
           {
             "node": "Merge",
             "type": "main",
-            "index": 1
+            "index": 0
           }
         ]
       ]
@@ -285,20 +421,72 @@
           }
         ]
       ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "timezone": "Asia/Kolkata",
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "executionTimeout": 180,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "errorWorkflow": "8wfFwAOom2izM5TO",
+    "timeSavedPerExecution": 5
   },
-  "versionId": "abf0ed31-aef5-4fa9-81f7-aa2c70f76957",
+  "versionId": "c11600fe-ecdb-417b-8be8-29237eaddedc",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "f6222274b4cb72740eaed902916eb76a286d1ef234308e6d1d84d668a1c7f812"
   },
-  "id": "8wfFwAOom2izM5TO",
+  "id": "I9jDV0ZbOh2vV7Ox",
   "tags": []
 }

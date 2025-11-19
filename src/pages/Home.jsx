@@ -38,7 +38,6 @@ const Home = () => {
     Punjabi: { code: 'pa-IN', nativeName: 'ਪੰਜਾਬੀ', translateCode: 'pa' },
     Assamese: { code: 'as-IN', nativeName: 'অসমীয়া', translateCode: 'as' },
     Nepali: { code: 'ne-NP', nativeName: 'नेपाली', translateCode: 'ne' },
-    Sanskrit: { code: 'sa-IN', nativeName: 'संस्कृतम्', translateCode: 'sa' },
     Urdu: { code: 'ur-IN', nativeName: 'اردو', translateCode: 'ur' }
   };
 
@@ -268,7 +267,7 @@ const Home = () => {
         formData.append("language", language);
 
         const response = await fetch(
-          "http://localhost:5678/webhook/6d3ce1cb-025a-4cd8-808a-d2a804aea741",
+          "http://localhost:5678/webhook/8e4885d1-670f-4fad-9e45-4022f25d3fd7",
           {
             method: "POST",
             body: formData,
@@ -287,8 +286,8 @@ const Home = () => {
         if (contentType && contentType.includes("application/json")) {
           const json = await response.json();
           // The user specified the format is: [{ useroutput: "...", chatbot: "..." }]
-          if (Array.isArray(json) && json.length > 0 && json[0].useroutput) {
-            summaryText = json[0].useroutput;
+          if (Array.isArray(json) && json.length > 0 && json[1].useroutput) {
+            summaryText = json[1].useroutput;
           } else {
             // Fallback for unexpected JSON structure
             summaryText = JSON.stringify(json, null, 2);
