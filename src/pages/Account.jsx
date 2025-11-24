@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext } from "react";
 import SummaryModal from "../components/SummaryModal";
 import SummaryCard from "../components/SummaryCard";
 import { UserContext } from "../context/UserContext";
-import useScript from "../hooks/useScript";
 
 const Account = () => {
   const { user, token } = useContext(UserContext);
@@ -12,17 +11,14 @@ const Account = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "" });
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
-  const razorpayStatus = useScript("https://checkout.razorpay.com/v1/checkout.js");
 
   useEffect(() => {
     if (user) {
-      setFormData({ name: user.name || "", email: user.email || "", phone: user.phone || "" });
+      setFormData({ name: user.name, email: user.email, phone: user.phone });
     }
   }, [user]);
 
   const checkSubscription = async () => {
-    setSubscriptionLoading(true);
     try {
       if (!token) return;
 
@@ -38,8 +34,6 @@ const Account = () => {
     } catch (err) {
       console.error("❌ Subscription check error:", err);
       setIsSubscribed(false);
-    } finally {
-      setSubscriptionLoading(false);
     }
   };
 
@@ -80,12 +74,9 @@ const Account = () => {
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        console.error('User update failed with errors:', data.errors);
-        throw new Error(data.errors ? data.errors[0].msg : 'Failed to update user.');
-      }
+      if (!res.ok) throw new Error("Failed to update user.");
 
+      const data = await res.json();
       // The user state will be updated through the context, no need to setUser here
       setIsEditing(false);
     } catch (err) {
@@ -121,11 +112,6 @@ const Account = () => {
   };
 
   const handlePayment = async () => {
-    if (razorpayStatus !== 'ready') {
-      console.log('Razorpay script not ready');
-      return;
-    }
-
     try {
       if (!token) throw new Error("No token found, please log in again.");
 
@@ -247,9 +233,10 @@ const Account = () => {
                 id="email"
                 type="email"
                 value={formData.email}
-                readOnly
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
               />
-              <span className="readonly-explanation">Email address cannot be changed.</span>
             </div>
             <div className="form-group">
               <label htmlFor="phone">Phone</label>
@@ -280,14 +267,10 @@ const Account = () => {
 
       <div className="subscription-info">
         <h3>Subscription Status</h3>
-        {subscriptionLoading ? (
-          <p>Loading status...</p>
-        ) : isSubscribed ? (
+        {isSubscribed ? (
           <p>You are subscribed!</p>
         ) : (
-          <button onClick={handlePayment}  disabled={razorpayStatus !== 'ready'}>
-            Subscribe
-          </button>
+          <button onClick={handlePayment}>Subscribe</button>
         )}
       </div>
 
