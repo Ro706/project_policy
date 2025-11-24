@@ -37,6 +37,17 @@
   font-size: 1.1em;
 }
 
+.readonly-explanation {
+  font-size: 0.8em;
+  color: #a8b2d1;
+  margin-top: 5px;
+}
+
+.form-group input[readOnly] {
+  background-color: #2a314e;
+  cursor: not-allowed;
+}
+
 .edit-button {
   margin-left: auto;
   padding: 10px 20px;

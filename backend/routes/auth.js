@@ -255,7 +255,7 @@ router.post("/getuser", fetchuser, async (req, res) => {
 router.put('/updateuser', fetchuser, [
     body('name').isString().notEmpty().withMessage('Name is required'),
     body('email').isEmail().withMessage('Invalid email address'),
-    body('phone').matches(/^\+?[0-9]{10,14}$/).withMessage('Please enter a valid phone number (10-14 digits).'),
+    body('phone').optional({ nullable: true, checkFalsy: true }).matches(/^\+?[0-9]{10,14}$/).withMessage('Please enter a valid phone number (10-14 digits).'),
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
