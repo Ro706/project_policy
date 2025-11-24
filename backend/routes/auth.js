@@ -198,7 +198,45 @@ router.post(
   }
 );
 
+const admin = require('../firebase');
 const fetchuser = require('../middleware/fetchalluser');
+
+router.post('/google-login', async (req, res) => {
+    const { token } = req.body;
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        const { name, email, uid } = decodedToken;
+
+        let user = await User.findOne({ googleId: uid });
+
+        if (user) {
+            const data = {
+                user: {
+                    id: user.id
+                }
+            };
+            const authToken = jwt.sign(data, JWT_SECRET);
+            return res.json({ authToken });
+        } else {
+            user = await User.create({
+                name,
+                email,
+                googleId: uid,
+                isVerified: true
+            });
+            const data = {
+                user: {
+                    id: user.id
+                }
+            };
+            const authToken = jwt.sign(data, JWT_SECRET);
+            return res.json({ authToken });
+        }
+    } catch (error) {
+        console.error("Google login error:", error);
+        res.status(401).json({ error: "Invalid Google token" });
+    }
+});
 
 // GET /api/auth/getuser
 // routes/auth.js

@@ -3,12 +3,16 @@ import AuthCard from "../components/AuthCard";
 import { useNavigate } from "react-router-dom";
 import "../auth.css";
 import { UserContext } from "../context/UserContext";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import app from "../firebaseConfig";
 
 const Signup = () => {
   const [formData, setFormData] = useState({ name: "", email: "", password: "", phone: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { login } = useContext(UserContext);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -32,6 +36,24 @@ const Signup = () => {
     }
   };
 
+  const handleGoogleSignUp = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const token = await result.user.getIdToken();
+      const res = await fetch("http://localhost:5000/api/auth/google-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Google signup failed");
+      login(data.authToken);
+      navigate("/");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <AuthCard title="Create Account">
       <form onSubmit={handleSubmit} className="auth-form">
@@ -44,6 +66,7 @@ const Signup = () => {
             value={formData.name}
             onChange={handleChange}
             required
+            autoComplete="name"
           />
         </div>
 
@@ -56,6 +79,7 @@ const Signup = () => {
             value={formData.email}
             onChange={handleChange}
             required
+            autoComplete="email"
           />
         </div>
         <div>
@@ -67,6 +91,7 @@ const Signup = () => {
             value={formData.phone}
             onChange={handleChange}
             required
+            autoComplete="tel"
           />
         </div>
         <div>
@@ -78,6 +103,7 @@ const Signup = () => {
             value={formData.password}
             onChange={handleChange}
             required
+            autoComplete="new-password"
           />
         </div>
 
@@ -85,6 +111,9 @@ const Signup = () => {
 
         <button type="submit" className="auth-button">
           Sign up
+        </button>
+        <button type="button" onClick={handleGoogleSignUp} className="auth-button google-btn">
+          Sign up with Google
         </button>
       </form>
 
