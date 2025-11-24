@@ -3,12 +3,7 @@ import AuthCard from "../components/AuthCard";
 import { useNavigate } from "react-router-dom";
 import "../auth.css";
 import { UserContext } from "../context/UserContext";
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  createUserWithEmailAndPassword,
-} from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import app from "../firebaseConfig";
 
 const Signup = () => {
@@ -26,45 +21,18 @@ const Signup = () => {
     e.preventDefault();
     setError("");
     try {
-      // 1. Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-      const user = userCredential.user;
-      const token = await user.getIdToken();
-
-      // 2. Send token to backend to create user in MongoDB
-      const res = await fetch("http://localhost:5000/api/auth/firebase-signup", {
+      const res = await fetch("http://localhost:5000/api/auth/signup", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          phone: formData.phone,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
-
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Backend user creation failed.");
+        throw new Error(data.errors ? data.errors[0].msg : "Signup failed");
       }
-
-      // 3. Login user in the app with the custom JWT
-      login(data.authToken);
-      navigate("/");
+      navigate("/verify-otp", { state: { email: formData.email } });
     } catch (err) {
-      // Better error handling for Firebase errors
-      if (err.code === "auth/email-already-in-use") {
-        setError("This email address is already in use.");
-      } else if (err.code === "auth/weak-password") {
-        setError("The password is too weak.");
-      } else {
-        setError(err.message);
-      }
+      setError(err.message);
     }
   };
 
@@ -72,12 +40,10 @@ const Signup = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const token = await result.user.getIdToken();
-      const res = await fetch("http://localhost:5000/api/auth/firebase-login", {
+      const res = await fetch("http://localhost:5000/api/auth/google-login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Google signup failed");

@@ -3,12 +3,7 @@ import AuthCard from "../components/AuthCard";
 import { useNavigate } from "react-router-dom";
 import "../auth.css";
 import { UserContext } from "../context/UserContext";
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import app from "../firebaseConfig";
 
 const Login = () => {
@@ -26,41 +21,17 @@ const Login = () => {
     e.preventDefault();
     setError("");
     try {
-      // 1. Sign in user with Firebase Auth
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-      const user = userCredential.user;
-      const token = await user.getIdToken();
-
-      // 2. Send token to backend to get custom app JWT
-      const res = await fetch("http://localhost:5000/api/auth/firebase-login", {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
-
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Backend login failed.");
-      }
-
-      // 3. Login user in the app with the custom JWT
+      if (!res.ok) throw new Error(data.errors[0].msg || "Login failed");
       login(data.authToken);
       navigate("/");
     } catch (err) {
-      // Better error handling for Firebase errors
-      if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
-        setError("Invalid email or password.");
-      } else if (err.code === "auth/invalid-email") {
-        setError("Invalid email address.");
-      } else {
-        setError(err.message);
-      }
+      setError(err.message);
     }
   };
 
@@ -68,12 +39,10 @@ const Login = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const token = await result.user.getIdToken();
-      const res = await fetch("http://localhost:5000/api/auth/firebase-login", {
+      const res = await fetch("http://localhost:5000/api/auth/google-login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Google login failed");
