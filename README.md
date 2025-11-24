@@ -18,6 +18,9 @@ Project Policy is a web application that allows users to upload their policy doc
 *   **User Account Management:** Users can sign up, log in, and manage their account details, including name, email, and phone number.
 
 *   **Email OTP Verification:** To enhance security, all new user accounts now require email verification. An OTP (One-Time Password) is sent to the user's registered email address during the signup process. Users must verify their email with the OTP before they can log in.
+
+*   **Google Firebase Auth:** We use Google Firebase Authentication to enable secure Google Sign-Up and Sign-In for users who prefer logging in with their Google account.
+ 
 ## Architecture & Performance
 
 This section addresses how the application is structured to handle its tasks efficiently.
