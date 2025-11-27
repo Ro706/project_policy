@@ -16,6 +16,7 @@ body {
   border: 1px solid #1f2940;
   border-radius: 16px;
   padding: 40px;
+  margin-top: 150px;
   width: 380px;
   box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(20px);
@@ -74,6 +75,7 @@ body {
 .auth-button {
   background: linear-gradient(90deg, #8b5cf6, #3b82f6);
   border: none;
+  width: 100%;
   padding: 12px;
   color: #fff;
   font-size: 15px;
@@ -87,15 +89,46 @@ body {
 }
 
 .google-btn {
-    background: #fff;
-    border: 1px solid #4a5568;
-    color: #1a202c;
-    margin-top: 10px;
-    transition: background-color 0.3s ease;
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  color: #3c4043;
+  margin-top: 12px; /* Adjusted margin to provide space after OR divider */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
 .google-btn:hover {
-    background-color: #f7fafc;
+  background-color: #f7fafe;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  border-color: #d2e3fc;
+  opacity: 1;
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0; /* Provides spacing between form and Google button */
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #374151;
+  margin: 0 10px;
 }
 
 .auth-link {
