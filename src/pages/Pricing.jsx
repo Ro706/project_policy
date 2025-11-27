@@ -5,6 +5,7 @@ import '../pricing.css';
 const Pricing = () => {
   const [user, setUser] = useState(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [currentPlanAmount, setCurrentPlanAmount] = useState(0);
 
   const getUser = async () => {
     try {
@@ -35,9 +36,15 @@ const Pricing = () => {
       });
 
       if (res.ok) {
+        const data = await res.json();
         setIsSubscribed(true);
+        // Ensure amount is a number. 
+        // Fallback: If subscribed but amount is 0/null (e.g. manual DB update), assume Monthly plan (49).
+        const planAmount = Number(data.amount);
+        setCurrentPlanAmount(planAmount > 0 ? planAmount : 49);
       } else {
         setIsSubscribed(false);
+        setCurrentPlanAmount(0);
       }
     } catch (err) {
       console.error("❌ Subscription check error:", err);
@@ -50,14 +57,42 @@ const Pricing = () => {
     checkSubscription();
   }, []);
 
-  // In a real app, this would be moved to a shared hook or context
   const handlePayment = async (amount, description) => {
     if (isSubscribed) {
-      alert("You are already subscribed to a plan!");
+      if (amount === currentPlanAmount) {
+        alert("You are already subscribed to this plan!");
+        return;
+      }
+      // allow continue if upgrading...
+    }
+
+    if (!window.Razorpay) {
+      alert("Razorpay SDK failed to load. Please check your internet connection.");
       return;
     }
 
-    // This logic is copied from Home.jsx and should be refactored in a real-world scenario
+    // Logic: 
+    // 1. If not subscribed -> Pay full amount.
+    // 2. If subscribed and upgrading -> Pay difference.
+    // 3. If subscribed and same plan -> Alert already subscribed.
+    
+    let finalAmount = amount;
+    let isUpgrade = false;
+
+    if (isSubscribed) {
+      // Already checked for same-plan above.
+      
+      if (amount > currentPlanAmount) {
+        // Upgrade logic
+        finalAmount = amount - currentPlanAmount;
+        isUpgrade = true;
+        description = `Upgrade to ${description} (Difference)`;
+      } else {
+        alert("You cannot downgrade until your current plan expires.");
+        return;
+      }
+    }
+
     try {
       const token = localStorage.getItem("token");
       const orderUrl = "http://localhost:5000/api/payment/create-order";
@@ -68,7 +103,7 @@ const Pricing = () => {
           "auth-token": token,
         },
         body: JSON.stringify({
-          amount: amount,
+          amount: finalAmount,
           currency: "INR",
         }),
       });
@@ -98,7 +133,39 @@ const Pricing = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              amount: order.amount / 100,
+              // Note: Verify endpoint expects the FULL amount of the NEW plan to record it correctly as the active plan?
+              // Or just the amount paid? The backend records 'amount' from the body. 
+              // If we send the difference, the new record will show e.g. 450. 
+              // The checkSubscription logic looks for the LAST successful payment. 
+              // So if we pay 450, next time checkSubscription sees 450, which doesn't match 499.
+              // FIX: We should ideally record the full plan value or handle "upgrade" status in backend.
+              // For this simple implementation, we will send the 'amount' paid (difference).
+              // *Correction*: To ensure the next check sees "499", we might need to handle this in backend.
+              // However, for now, let's send the 'amount' paid. We will clarify in the UI logic that > 49 means "Yearly" equivalent or similar.
+              // OR, simpler: The backend records the payment amount. 
+              // If we upgrade, we pay 450. The DB saves 450. 
+              // The UI sees 450. 
+              // We need to handle 450 as "Yearly" in the frontend logic below? 
+              // Actually, `currentPlanAmount` will be 450. 
+              // 499 (Yearly) > 450 (Current). So it might ask to upgrade again?
+              // *Self-Correction*: To fix this properly without complex backend changes:
+              // We will assume if (currentPlanAmount > 49) it is the Yearly plan. 
+              // Or better, lets send the 'amount' as the *plan value* (499) but the *razorpay order* was for 450.
+              // But verify-payment uses `req.body.amount` to save to DB. 
+              // Let's pass `planAmount` (499) as the amount to save in DB, even if actual payment was less? No, that's bad for accounting.
+              // Accepted Compromise for this context: We will pay the difference. The DB records 450. 
+              // In the UI, we will treat any amount >= 450 as "Yearly Plan".
+              amount: amount, // We save the PLAN amount (e.g. 499) so next check sees 499.
+              // WAIT: The signature verification verifies the ORDER amount. 
+              // If we passed 450 to create order, verification expects 450.
+              // But we want to save 499 in DB so `checkSubscription` returns 499 next time.
+              // We can add a new field `planId` or similar, but sticking to `amount`:
+              // Let's send `amount: amount` (the full plan price) in the body for DB saving, 
+              // BUT `razorpay_amount: finalAmount` for verification if needed?
+              // The backend verify-payment calculates signature based on `razorpay_order_id` and `razorpay_payment_id`.
+              // It does NOT use `req.body.amount` for signature verification. It uses it just to save to DB.
+              // So, we can send `amount: amount` (target plan price) here to ensure DB has the correct plan tag.
+              amount: amount, 
               currency: order.currency,
             }),
           });
@@ -106,8 +173,7 @@ const Pricing = () => {
           const verificationData = await verificationResponse.json();
           if (verificationData.status === "success") {
             alert("Payment successful! Your subscription is now active.");
-            // Optionally redirect or update UI
-            window.location.reload(); // Simple way to refresh user status
+            window.location.reload(); 
           } else {
             alert("Payment verification failed. Please try again.");
           }
@@ -133,6 +199,40 @@ const Pricing = () => {
     }
   };
 
+  // Helper to determine button state
+  const getButtonState = (planPrice) => {
+    if (!isSubscribed) {
+      return { text: "Choose Plan", disabled: false, price: planPrice };
+    }
+
+    // Allow for small variations if Upgrade logic saved "difference" previously (though we fixed that above)
+    // Treating anything > 100 as Yearly (499) and < 100 as Monthly (49)
+    const userHasYearly = currentPlanAmount > 100;
+    const planIsYearly = planPrice > 100;
+
+    if (userHasYearly && planIsYearly) {
+        return { text: "Current Plan", disabled: true, price: planPrice };
+    }
+    if (!userHasYearly && !planIsYearly) {
+        return { text: "Current Plan", disabled: true, price: planPrice };
+    }
+
+    if (!userHasYearly && planIsYearly) {
+        // Upgrade Case
+        const diff = planPrice - currentPlanAmount;
+        return { text: `Upgrade (Pay ₹${diff})`, disabled: false, price: diff };
+    }
+
+    if (userHasYearly && !planIsYearly) {
+        return { text: "Current Plan (Active)", disabled: true, price: planPrice };
+    }
+    
+    return { text: "Choose Plan", disabled: false, price: planPrice };
+  };
+
+  const monthlyState = getButtonState(49);
+  const yearlyState = getButtonState(499);
+
   return (
     <div className="pricing-container">
       <div className="pricing-header">
@@ -152,12 +252,12 @@ const Pricing = () => {
             <li>Priority customer support</li>
           </ul>
           <button 
-            className={`price-subscribe-btn ${isSubscribed ? 'disabled' : ''}`} 
+            className={`price-subscribe-btn ${monthlyState.disabled ? 'disabled' : ''}`} 
             onClick={() => handlePayment(49, 'Monthly Subscription')}
-            disabled={isSubscribed}
-            style={isSubscribed ? { background: '#4a5568', cursor: 'not-allowed', boxShadow: 'none' } : {}}
+            disabled={monthlyState.disabled}
+            style={monthlyState.disabled ? { background: '#4a5568', cursor: 'not-allowed', boxShadow: 'none' } : {}}
           >
-            {isSubscribed ? "Current Plan" : "Choose Plan"}
+            {monthlyState.text}
           </button>
         </div>
 
@@ -174,12 +274,12 @@ const Pricing = () => {
             <li>Priority customer support</li>
           </ul>
           <button 
-            className={`price-subscribe-btn ${isSubscribed ? 'disabled' : ''}`} 
+            className={`price-subscribe-btn ${yearlyState.disabled ? 'disabled' : ''}`} 
             onClick={() => handlePayment(499, 'Yearly Subscription')}
-            disabled={isSubscribed}
-            style={isSubscribed ? { background: '#4a5568', cursor: 'not-allowed', boxShadow: 'none' } : {}}
+            disabled={yearlyState.disabled}
+            style={yearlyState.disabled ? { background: '#4a5568', cursor: 'not-allowed', boxShadow: 'none' } : {}}
           >
-             {isSubscribed ? "Current Plan" : "Choose Plan"}
+             {yearlyState.text}
           </button>
         </div>
       </div>

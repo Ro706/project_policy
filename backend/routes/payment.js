@@ -79,10 +79,10 @@ router.get('/check-subscription', fetchalluser, async (req, res) => {
     // Development-only bypass for easier testing
     if (process.env.NODE_ENV === 'development') {
         console.log('DEV MODE: Bypassing subscription check for /api/payment/check-subscription');
-        return res.json({ status: 'subscribed' });
+        return res.json({ status: 'subscribed', amount: 49 }); // Default to Monthly plan amount for testing
     }
 
-    // Production logic (same as the original checkSubscription middleware)
+    // Production logic
     try {
         const user = await User.findById(req.user.id);
         if (!user) {
@@ -97,8 +97,13 @@ router.get('/check-subscription', fetchalluser, async (req, res) => {
                 await user.save();
                 return res.status(402).json({ error: "Subscription expired. Please pay to renew." });
             } else {
-                // User is subscribed
-                return res.json({ status: 'subscribed' });
+                // User is subscribed. Find the latest successful payment to determine the plan amount.
+                const lastPayment = await Payment.findOne({ user: req.user.id, status: 'success' })
+                    .sort({ createdAt: -1 });
+                
+                const planAmount = lastPayment ? lastPayment.amount : 0;
+
+                return res.json({ status: 'subscribed', amount: planAmount });
             }
         } else {
             return res.status(402).json({ error: "You need to be subscribed to access this feature." });
