@@ -1,9 +1,10 @@
-import React,{ useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../pricing.css';
 
 
 const Pricing = () => {
   const [user, setUser] = useState(null);
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   const getUser = async () => {
     try {
@@ -24,12 +25,38 @@ const Pricing = () => {
     }
   };
 
+  const checkSubscription = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const res = await fetch("http://localhost:5000/api/payment/check-subscription", {
+        headers: { "auth-token": token },
+      });
+
+      if (res.ok) {
+        setIsSubscribed(true);
+      } else {
+        setIsSubscribed(false);
+      }
+    } catch (err) {
+      console.error("❌ Subscription check error:", err);
+      setIsSubscribed(false);
+    }
+  };
+
   useEffect(() => {
     getUser();
+    checkSubscription();
   }, []);
 
   // In a real app, this would be moved to a shared hook or context
   const handlePayment = async (amount, description) => {
+    if (isSubscribed) {
+      alert("You are already subscribed to a plan!");
+      return;
+    }
+
     // This logic is copied from Home.jsx and should be refactored in a real-world scenario
     try {
       const token = localStorage.getItem("token");
@@ -124,8 +151,13 @@ const Pricing = () => {
             <li>Chatbot access</li>
             <li>Priority customer support</li>
           </ul>
-          <button className="price-subscribe-btn" onClick={() => handlePayment(49, 'Monthly Subscription')}>
-            Choose Plan
+          <button 
+            className={`price-subscribe-btn ${isSubscribed ? 'disabled' : ''}`} 
+            onClick={() => handlePayment(49, 'Monthly Subscription')}
+            disabled={isSubscribed}
+            style={isSubscribed ? { background: '#4a5568', cursor: 'not-allowed', boxShadow: 'none' } : {}}
+          >
+            {isSubscribed ? "Current Plan" : "Choose Plan"}
           </button>
         </div>
 
@@ -141,8 +173,13 @@ const Pricing = () => {
             <li>Chatbot access</li>
             <li>Priority customer support</li>
           </ul>
-          <button className="price-subscribe-btn" onClick={() => handlePayment(499, 'Yearly Subscription')}>
-            Choose Plan
+          <button 
+            className={`price-subscribe-btn ${isSubscribed ? 'disabled' : ''}`} 
+            onClick={() => handlePayment(499, 'Yearly Subscription')}
+            disabled={isSubscribed}
+            style={isSubscribed ? { background: '#4a5568', cursor: 'not-allowed', boxShadow: 'none' } : {}}
+          >
+             {isSubscribed ? "Current Plan" : "Choose Plan"}
           </button>
         </div>
       </div>
