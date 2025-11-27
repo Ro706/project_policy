@@ -1,190 +1,120 @@
 import React from 'react';
-
-const features = [
-  {
-    icon: '🔒',
-    title: 'User Authentication',
-    desc: 'Secure registration and login to keep your documents and summaries private.'
-  },
-  {
-    icon: '📄',
-    title: 'PDF Summarization',
-    desc: 'Upload PDFs and get concise, configurable summaries to save time.'
-  },
-  {
-    icon: '🌐',
-    title: 'Translation',
-    desc: 'Translate summaries into multiple Indian languages for wider accessibility.'
-  },
-  {
-    icon: '🔊',
-    title: 'Text-to-Speech',
-    desc: 'Listen to summaries in the selected language for on-the-go consumption.'
-  },
-  {
-    icon: '🤖',
-    title: 'Chat with PDF',
-    desc: 'Ask questions about the uploaded document and get AI-powered answers.'
-  },
-  {
-    icon: '⬇️',
-    title: 'Download Summary',
-    desc: 'Save summaries as PDF files for offline use and record-keeping.'
-  }
-];
-
-const styles = {
-  page: {
-    marginTop: 50,
-    // background: 'linear-gradient(180deg, #0f1724 0%, #081027 100%)',
-    color: '#E6EEF8',
-    minHeight: '100vh',
-    padding: '48px 20px',
-    fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial"
-  },
-  container: {
-    maxWidth: 1100,
-    margin: '0 auto'
-  },
-  hero: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 16,
-    alignItems: 'flex-start'
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: 700,
-    lineHeight: 1.05,
-    margin: 0,
-    color: '#FFFFFF'
-  },
-  subtitle: {
-    color: '#A9C1E6',
-    fontSize: 16,
-    margin: 0,
-    maxWidth: 820
-  },
-  card: {
-    background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
-    border: '1px solid rgba(255,255,255,0.06)',
-    borderRadius: 12,
-    padding: 20,
-    marginTop: 24,
-    color: '#EAF3FF'
-  },
-  featuresGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: 14,
-    marginTop: 18
-  },
-  featureItem: {
-    background: 'rgba(255,255,255,0.02)',
-    border: '1px solid rgba(255,255,255,0.04)',
-    padding: 14,
-    borderRadius: 10,
-    display: 'flex',
-    gap: 12,
-    alignItems: 'flex-start'
-  },
-  icon: {
-    fontSize: 28,
-    lineHeight: 1
-  },
-  featureTitle: {
-    margin: 0,
-    fontSize: 15,
-    color: '#FFFFFF'
-  },
-  featureDesc: {
-    margin: '6px 0 0 0',
-    fontSize: 13,
-    color: '#BFD7FF',
-    lineHeight: 1.35
-  },
-  ctaRow: {
-    marginTop: 22,
-    display: 'flex',
-    gap: 12,
-    alignItems: 'center'
-  },
-  ctaBtn: {
-    background: '#2563EB',
-    color: '#FFF',
-    border: 'none',
-    padding: '10px 16px',
-    borderRadius: 8,
-    cursor: 'pointer',
-    fontWeight: 600
-  },
-  secondaryLink: {
-    color: '#A9C1E6',
-    textDecoration: 'underline',
-    cursor: 'pointer',
-    fontSize: 14
-  },
-  sectionTitle: {
-    marginTop: 28,
-    marginBottom: 8,
-    fontSize: 18,
-    color: '#FFFFFF'
-  },
-  paragraph: {
-    color: '#CDE3FF',
-    fontSize: 15,
-    lineHeight: 1.6,
-    margin: 0
-  }
-};
+import { useNavigate } from 'react-router-dom';
+import '../about.css';
 
 const About = () => {
+  const navigate = useNavigate();
+
   return (
-    <div style={styles.page}>
-      <div style={styles.container}>
-        <div style={styles.hero}>
-          <h1 style={styles.title}>About Policy Summarizer</h1>
-          <p style={styles.subtitle}>
-            The Policy Summarizer helps you quickly understand lengthy policy and legal documents —
-            from terms of service to government regulations — by providing concise summaries, translations,
-            audio playback, and an interactive chatbot for follow-up questions.
-          </p>
-        </div>
+    <div className="about-container">
+      <div className="hero-section">
+        <h1 className="hero-title">About Policy Summarizer</h1>
+        <p className="hero-subtitle">
+          Demystifying complex documents with AI-powered summarization, translation, and interactive chat.
+        </p>
+      </div>
 
-        <div style={styles.card} aria-labelledby="project-desc">
-          <h2 id="project-desc" style={{ margin: 0, color: '#DFF0FF' }}>Project Description</h2>
-          <p style={{ ...styles.paragraph, marginTop: 12 }}>
-            The Policy Summarizer is a web application that allows users to upload PDF documents, get summaries,
-            translate them, and interact with a chatbot to ask questions about the document. This tool is
-            designed to help users quickly understand the content of lengthy policy documents.
+      <div className="content-card">
+        <section>
+          <h2 className="section-header">Mission & Vision</h2>
+          <p className="paragraph">
+            Policy Summarizer empowers individuals, professionals, and researchers to quickly understand lengthy legal and policy documents. 
+            By leveraging advanced AI, we transform dense PDFs into concise, actionable insights, breaking down language barriers and making information accessible to everyone.
           </p>
+        </section>
 
-          <h3 style={styles.sectionTitle}>Key Features</h3>
-          <div style={styles.featuresGrid}>
-            {features.map((f) => (
-              <div key={f.title} style={styles.featureItem}>
-                <div style={styles.icon} aria-hidden>{f.icon}</div>
-                <div>
-                  <h4 style={styles.featureTitle}>{f.title}</h4>
-                  <p style={styles.featureDesc}>{f.desc}</p>
-                </div>
-              </div>
-            ))}
+        <section className="architecture-section">
+          <h2 className="section-header">Core Features</h2>
+          <div className="features-grid">
+            <div className="feature-item">
+              <span className="feature-icon">📄</span>
+              <h3 className="feature-title">Smart Summarization</h3>
+              <p className="feature-desc">Upload PDFs and receive concise summaries tailored to your needs (200, 700, or 1000+ words).</p>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">🤖</span>
+              <h3 className="feature-title">Interactive Chatbot</h3>
+              <p className="feature-desc">Ask follow-up questions about your document and get instant, context-aware answers from our AI.</p>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">🌐</span>
+              <h3 className="feature-title">Multi-Language Support</h3>
+              <p className="feature-desc">Translate summaries into over 10 languages, ensuring you understand the content in your preferred language.</p>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">🔊</span>
+              <h3 className="feature-title">Text-to-Speech</h3>
+              <p className="feature-desc">Listen to your summaries on the go with our optimized, low-latency audio playback feature.</p>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">🔒</span>
+              <h3 className="feature-title">Secure & Private</h3>
+              <p className="feature-desc">Your data is handled with top-tier security, including encrypted passwords and secure authentication protocols.</p>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">⚡</span>
+              <h3 className="feature-title">Real-Time Processing</h3>
+              <p className="feature-desc">Experience lightning-fast results thanks to our asynchronous microservices architecture.</p>
+            </div>
           </div>
+        </section>
 
-          <div style={styles.ctaRow}>
-            <a href="/" style={{ textDecoration: 'none' }}>
-              <button style={styles.ctaBtn}>Get Started</button>
-            </a>
-            <a href="/account" style={styles.secondaryLink}>View your saved summaries</a>
+        <section className="architecture-section">
+          <h2 className="section-header">Who Is This For?</h2>
+          <div className="use-cases-grid">
+            <div className="use-case-item">
+              <span className="use-case-title">🎓 Students & Researchers</span>
+              <p className="use-case-desc">Quickly digest complex academic papers and research reports without getting bogged down in jargon.</p>
+            </div>
+            <div className="use-case-item">
+              <span className="use-case-title">⚖️ Legal Professionals</span>
+              <p className="use-case-desc">Get rapid overviews of case files and policy documents to streamline your review process.</p>
+            </div>
+            <div className="use-case-item">
+              <span className="use-case-title">🏢 Business Executives</span>
+              <p className="use-case-desc">Make informed decisions faster by summarizing lengthy market reports and compliance documents.</p>
+            </div>
+            <div className="use-case-item">
+              <span className="use-case-title">📰 Journalists</span>
+              <p className="use-case-desc">Analyze government reports and white papers instantly to break news with accuracy and speed.</p>
+            </div>
           </div>
+        </section>
 
-          <h3 style={styles.sectionTitle}>Why it matters</h3>
-          <p style={styles.paragraph}>
-            By making complex documents more accessible and actionable, Policy Summarizer empowers individuals,
-            journalists, researchers, and advocates to understand rights and responsibilities, to hold organizations
-            accountable, and to accelerate informed decision-making.
+        <section className="architecture-section">
+          <h2 className="section-header">How It Works</h2>
+          <div className="arch-block">
+            <h3 className="arch-title">1. Intelligent Offloading</h3>
+            <p className="paragraph" style={{ marginBottom: 0 }}>
+              We prioritize speed. Complex summarization tasks are handled by specialized external services, ensuring our application remains responsive and you get results faster.
+            </p>
+          </div>
+          <div className="arch-block">
+            <h3 className="arch-title">2. Low-Latency Audio</h3>
+            <p className="paragraph" style={{ marginBottom: 0 }}>
+              Our Text-to-Speech engine streams audio directly to your browser, allowing playback to start almost instantly without waiting for the full file to download.
+            </p>
+          </div>
+          <div className="arch-block">
+            <h3 className="arch-title">3. Secure Authentication</h3>
+            <p className="paragraph" style={{ marginBottom: 0 }}>
+              We use industry-standard authentication (JWT) and Google Sign-In to ensure your account and saved summaries remain private and secure.
+            </p>
+          </div>
+        </section>
+
+        <section className="privacy-section">
+          <span className="privacy-badge">Privacy & Trust</span>
+          <h2 className="feature-title" style={{ fontSize: '1.5rem', marginBottom: '10px' }}>Your Data Is Safe With Us</h2>
+          <p className="paragraph" style={{ marginBottom: 0 }}>
+            We understand the sensitivity of the documents you upload. That's why we employ end-to-end encryption for data transmission and strict access controls. We do not sell your data or use your documents to train public models without your explicit consent.
           </p>
+        </section>
+
+        <div className="cta-section">
+          <h2 className="cta-title">Ready to simplify your reading?</h2>
+          <p className="cta-text">Join thousands of users who are saving time with Policy Summarizer.</p>
+          <button className="cta-button" onClick={() => navigate('/')}>Get Started for Free</button>
         </div>
       </div>
     </div>
