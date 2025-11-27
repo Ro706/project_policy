@@ -20,7 +20,7 @@ body {
   border-radius: 20px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
   padding: 30px;
-  width: 95%;
+  width: 70%;
   max-width: 1200px;
 }
 
@@ -187,7 +187,17 @@ select {
   font-size: 13px;
   transition: 0.3s;
 }
-
+.lang-section {
+  width: 50%;
+}
+.lang-section select {
+  width: 100%;
+  padding: 10px 15px;
+  background: #232843;
+  color: white;
+  border: none;
+  border-radius: 8px;
+}
 .audio-btn.stop {
   background: #e74c3c;
 }
