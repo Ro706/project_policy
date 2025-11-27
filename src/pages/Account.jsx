@@ -200,16 +200,30 @@ const Account = () => {
       <div className="profile-card">
         {!isEditing ? (
           <div className="profile-header">
-            <img
-              src={`https://ui-avatars.com/api/?name=${user.name}&background=0d8abc&color=fff`}
-              alt="Profile"
-              className="profile-avatar"
-            />
-            <div className="profile-info">
-              <h2>{user.name}</h2>
-              <p>{user.email}</p>
-              <p>{user.phone}</p>
+            <div className="profile-avatar-container">
+              <img
+                src={`https://ui-avatars.com/api/?name=${user.name}&background=0d8abc&color=fff`}
+                alt="Profile"
+                className="profile-avatar"
+              />
             </div>
+            <div className="profile-details">
+                          <div className="profile-info">
+                            <div className="profile-name-row">
+                              <h2>{user.name}</h2>
+                            </div>
+                            <div className="profile-contact">
+                              <p className="email-display">{user.email}</p>
+                              <div className="phone-and-badge-row">
+                                <p className="phone-number-display">{user.phone}</p>
+                                {isSubscribed && (
+                                  <span className="subscriber-badge">
+                                    <span className="badge-star">★</span> PRO
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>            </div>
             <button onClick={() => setIsEditing(true)} className="edit-button">
               Edit Profile
             </button>
@@ -217,7 +231,7 @@ const Account = () => {
         ) : (
           <form onSubmit={handleUpdate} className="edit-form">
             <div className="form-group">
-              <label htmlFor="name">Name</label>
+              <label htmlFor="name">Full Name</label>
               <input
                 id="name"
                 type="text"
@@ -228,7 +242,7 @@ const Account = () => {
               />
             </div>
             <div className="form-group">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">Email Address</label>
               <input
                 id="email"
                 type="email"
@@ -239,7 +253,7 @@ const Account = () => {
               />
             </div>
             <div className="form-group">
-              <label htmlFor="phone">Phone</label>
+              <label htmlFor="phone">Phone Number</label>
               <input
                 id="phone"
                 type="text"
@@ -265,18 +279,21 @@ const Account = () => {
         )}
       </div>
 
-      <div className="subscription-info">
-        <h3>Subscription Status</h3>
-        {isSubscribed ? (
-          <p>You are subscribed!</p>
-        ) : (
-          <button onClick={handlePayment}>Subscribe</button>
-        )}
-      </div>
+      {!isSubscribed && (
+        <div className="subscription-banner">
+          <div className="sub-text">
+            <h3>Upgrade to Premium</h3>
+            <p>Unlock exclusive features and unlimited summaries.</p>
+          </div>
+          <button onClick={handlePayment} className="subscribe-btn">
+            Subscribe Now
+          </button>
+        </div>
+      )}
 
-      <h3 style={{ marginTop: "30px" }}>📝 Your Summaries</h3>
+      <h3 style={{ marginTop: "30px", marginBottom: "20px" }}>📝 Your Summaries</h3>
       {summaries.length === 0 ? (
-        <p>No summaries found yet.</p>
+        <p style={{ color: "#a0aec0" }}>No summaries found yet.</p>
       ) : (
         <div className="summary-list">
           {summaries.map((item) => (
