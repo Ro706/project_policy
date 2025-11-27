@@ -184,5 +184,9 @@ The application will be available at `http://localhost:5173`.
 ## n8n Agent :
 <img width="1919" height="932" alt="image" src="https://github.com/user-attachments/assets/f2e54c75-0b07-4794-b114-5ea31ac12992" />
 <img width="1892" height="918" alt="image" src="https://github.com/user-attachments/assets/88959528-c00b-48cb-a95e-70e4d80b3090" />
+<img width="1755" height="1134" alt="image" src="https://github.com/user-attachments/assets/87a0625c-afb1-4341-825b-1a83694d8e39" />
+<img width="1900" height="915" alt="image" src="https://github.com/user-attachments/assets/463b142e-6d7c-4f7b-a9da-fc2edce7c439" />
+
+
 
 
