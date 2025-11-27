@@ -1,5 +1,5 @@
 .pricing-container {
-  margin-top: 180px;
+  /* margin-top: 180px; */
   padding: 4rem 2rem;
   /* background-color: 181c2e; Dark background */
   color: #f0f0f0;
@@ -113,7 +113,7 @@
   font-size: 1.2rem;
 }
 
-.subscribe-btn {
+.price-subscribe-btn {
   background-color: #007bff;
   color: white;
   border: none;
@@ -126,15 +126,15 @@
   margin-top: auto; /* Pushes button to the bottom */
 }
 
-.subscribe-btn:hover {
+.price-subscribe-btn:hover {
   background-color: #0056b3;
   transform: scale(1.02);
 }
 
-.plan-card.popular .subscribe-btn {
+.plan-card.popular .price-subscribe-btn {
     background-color: #0056b3;
 }
 
-.plan-card.popular .subscribe-btn:hover {
+.plan-card.popular .price-subscribe-btn:hover {
     background-color: #004494;
 }

@@ -124,7 +124,7 @@ const Pricing = () => {
             <li>Chatbot access</li>
             <li>Priority customer support</li>
           </ul>
-          <button className="subscribe-btn" onClick={() => handlePayment(49, 'Monthly Subscription')}>
+          <button className="price-subscribe-btn" onClick={() => handlePayment(49, 'Monthly Subscription')}>
             Choose Plan
           </button>
         </div>
@@ -141,7 +141,7 @@ const Pricing = () => {
             <li>Chatbot access</li>
             <li>Priority customer support</li>
           </ul>
-          <button className="subscribe-btn" onClick={() => handlePayment(499, 'Yearly Subscription')}>
+          <button className="price-subscribe-btn" onClick={() => handlePayment(499, 'Yearly Subscription')}>
             Choose Plan
           </button>
         </div>

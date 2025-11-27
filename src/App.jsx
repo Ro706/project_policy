@@ -14,6 +14,7 @@ import { Navigate } from "react-router-dom";
 import "./account.css";
 import "./components/Chatbot.css";
 import VerifyOtp from "./pages/VerifyOtp";
+import './feedback.css';
 
 const ProtectedRoute = ({ element }) => {
   const isAuthenticated = localStorage.getItem("token");
