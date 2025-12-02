@@ -154,80 +154,191 @@ const Home = () => {
     const margin = 20;
     const maxWidth = pageWidth - 2 * margin;
     
-    doc.setFontSize(16);
+    // Helper to check if text fits on page
+    let currentY = margin;
+    const checkPageBreak = (heightToAdd) => {
+      if (currentY + heightToAdd > pageHeight - margin) {
+        doc.addPage();
+        currentY = margin;
+        return true;
+      }
+      return false;
+    };
+
+    // --- 1. Title ---
+    doc.setFontSize(18);
     doc.setFont(undefined, 'bold');
-    doc.text('Policy Summary', margin, margin);
+    doc.text('Policy Summary', margin, currentY);
+    currentY += 15;
     
+    // --- 2. Formatted Summary Text ---
     doc.setFontSize(12);
     doc.setFont(undefined, 'normal');
     
-    // Add Summary Text
-    const splitText = doc.splitTextToSize(summary, maxWidth);
-    doc.text(splitText, margin, margin + 10);
+    const lineHeight = 7; // approximate line height for size 12
     
-    // Calculate height of text block
-    const lineHeight = doc.getLineHeight() / doc.internal.scaleFactor; 
-    const textHeight = splitText.length * lineHeight * 1.15; // Approx line height factor
-    let currentY = margin + 10 + textHeight + 10; // Margin + Title + Text + Gap
+    // Pre-split text by newlines to handle paragraphs
+    const lines = summary.split('\n');
 
-    // Add Flow Diagram if available
+    lines.forEach((line) => {
+      let text = line.trim();
+      if (!text) {
+        currentY += lineHeight / 2; // Small gap for empty lines
+        return; 
+      }
+
+      // Check for bullet points
+      let isBullet = false;
+      if (text.startsWith('* ') || text.startsWith('- ')) {
+        isBullet = true;
+        text = text.substring(2).trim();
+      }
+
+      // Calculate indentation and width
+      const indent = isBullet ? 10 : 0;
+      const availableWidth = maxWidth - indent;
+      const startX = margin + indent;
+
+      // Draw Bullet
+      if (isBullet) {
+        doc.text('•', margin + 3, currentY);
+      }
+
+      // Tokenize for Bold (**text**)
+      // "Normal **Bold** Normal" -> ["Normal ", "Bold", " Normal"]
+      const parts = text.split(/\*\*(.*?)\*\*/g); 
+      
+      // We need to process parts and wrap text manually
+      // This is complex in jsPDF without HTML. 
+      // Simplified approach: 
+      // 1. Reconstruct the line with styling markers 
+      // 2. Or just print plain text if wrapping is hard.
+      // Robust Approach: recursive word wrapping.
+      
+      let buffer = []; // words to print
+      let isBold = false;
+      
+      // Flatten parts into words with style info
+      let wordsWithStyle = [];
+      parts.forEach((part, index) => {
+         const bold = index % 2 === 1; // odd indices are inside **
+         const words = part.split(' ');
+         words.forEach((w, i) => {
+            if(w) wordsWithStyle.push({ text: w, bold: bold });
+            // Add space after word if it wasn't the last in part, or if next part exists
+            if(i < words.length - 1 || index < parts.length - 1) {
+                wordsWithStyle.push({ text: ' ', bold: bold }); 
+            }
+         });
+      });
+
+      // Render Words
+      let currentLineX = startX;
+      
+      wordsWithStyle.forEach(({ text: word, bold }) => {
+        doc.setFont(undefined, bold ? 'bold' : 'normal');
+        const wordWidth = doc.getTextWidth(word);
+
+        if (currentLineX + wordWidth > margin + maxWidth) {
+          // New Line
+          currentY += lineHeight;
+          checkPageBreak(lineHeight);
+          currentLineX = startX; // Reset X (keep indent)
+        }
+
+        doc.text(word, currentLineX, currentY);
+        currentLineX += wordWidth;
+      });
+
+      currentY += lineHeight * 1.5; // End of paragraph/bullet
+      checkPageBreak(lineHeight);
+    });
+
+    currentY += 10; // Gap before diagram
+
+    // --- 3. Flow Diagram ---
     if (mermaidSvg) {
       try {
-        // Convert SVG string to PNG via Canvas
-        const svgData = mermaidSvg;
+        // 1. Parse the SVG string to get dimensions and ensure it's well-formed
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(mermaidSvg, "image/svg+xml");
+        const svgElement = svgDoc.documentElement;
+        
+        // Get natural dimensions or fallback
+        let width = parseFloat(svgElement.getAttribute("width")) || 800;
+        let height = parseFloat(svgElement.getAttribute("height")) || 600;
+        
+        // Ensure width/height are set in the SVG string for the Image to respect them
+        svgElement.setAttribute("width", width);
+        svgElement.setAttribute("height", height);
+        
+        // Serializer to get the string back
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svgElement);
+
+        // 2. Use Base64 Data URI instead of Blob URL
+        // btoa(unescape(encodeURIComponent(...))) handles Unicode (emoji/special chars) correctly
+        const base64Svg = btoa(unescape(encodeURIComponent(svgString)));
+        const dataUrl = `data:image/svg+xml;base64,${base64Svg}`;
+
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
 
-        // Proper encoding for SVG data URL
-        const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
-        const url = URL.createObjectURL(svgBlob);
-
         await new Promise((resolve, reject) => {
           img.onload = () => {
-            // Set canvas size to match image (or scaled)
-            canvas.width = img.width * 2; // High res
-            canvas.height = img.height * 2;
-            ctx.scale(2, 2);
-            ctx.fillStyle = 'white'; // PDF needs white background usually
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0);
-            
-            const imgData = canvas.toDataURL('image/png');
-            
-            // Calculate dimensions for PDF
-            // Fit width to page margins, keep aspect ratio
-            const imgProps = doc.getImageProperties(imgData);
-            const pdfImgWidth = maxWidth;
-            const pdfImgHeight = (imgProps.height * pdfImgWidth) / imgProps.width;
+            try {
+                // Set canvas size (High Res)
+                canvas.width = width * 3; 
+                canvas.height = height * 3;
+                ctx.scale(3, 3);
+                
+                // White background
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                const imgData = canvas.toDataURL('image/png');
+                
+                // Scale to fit PDF Page
+                const imgProps = doc.getImageProperties(imgData);
+                const pdfImgWidth = maxWidth;
+                const pdfImgHeight = (imgProps.height * pdfImgWidth) / imgProps.width;
 
-            // Check if new page is needed
-            if (currentY + pdfImgHeight > pageHeight - margin) {
-               doc.addPage();
-               currentY = margin;
+                checkPageBreak(pdfImgHeight + 20);
+
+                doc.setFont(undefined, 'bold');
+                doc.text("Flow Diagram:", margin, currentY);
+                doc.addImage(imgData, 'PNG', margin, currentY + 5, pdfImgWidth, pdfImgHeight);
+                resolve();
+            } catch (innerErr) {
+                console.error("Canvas export failed:", innerErr);
+                doc.setFont(undefined, 'normal');
+                doc.setTextColor(255, 0, 0);
+                doc.text("(Diagram export blocked by browser security)", margin, currentY);
+                doc.setTextColor(0, 0, 0);
+                resolve(); 
             }
-
-            doc.text("Flow Diagram:", margin, currentY);
-            doc.addImage(imgData, 'PNG', margin, currentY + 5, pdfImgWidth, pdfImgHeight);
-            
-            URL.revokeObjectURL(url);
-            resolve();
           };
-          img.onerror = reject;
-          img.src = url;
+          img.onerror = (e) => {
+              console.error("Image load error", e);
+              resolve(); 
+          };
+          img.src = dataUrl;
         });
+
       } catch (err) {
-        console.error("Error adding diagram to PDF:", err);
-        doc.text("(Diagram could not be generated in PDF)", margin, currentY);
+        console.error("Error preparing diagram for PDF:", err);
       }
     }
     
-    // Footer Date
+    // Footer
     const date = new Date().toLocaleDateString();
     doc.setFontSize(10);
     doc.setTextColor(100);
-    // Position at bottom of current page (or next if filled)
-    doc.text(`Generated on ${date}`, margin, pageHeight - 10);
+    const lastY = doc.internal.pageSize.getHeight() - 10;
+    doc.text(`Generated on ${date}`, margin, lastY);
     
     doc.save('policy-summary.pdf');
   };

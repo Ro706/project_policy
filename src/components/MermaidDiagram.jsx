@@ -9,7 +9,8 @@ const MermaidDiagram = ({ chart, onRender }) => {
     mermaid.initialize({ 
       startOnLoad: true,
       theme: 'default',
-      securityLevel: 'loose',
+      securityLevel: 'strict', // Strict prevents HTML labels by default
+      flowchart: { htmlLabels: false, useMaxWidth: false }, // Explicitly disable HTML labels
     });
   }, []);
 
