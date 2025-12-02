@@ -9,6 +9,8 @@ Project Policy is a web application that allows users to upload their policy doc
 *   **Interactive Chatbot:** After a summary is generated, its content is used as the context for a session-specific chatbot. Users can ask questions about the summary, allowing them to clarify points without re-reading the original document. This is a premium feature.
 *   **Multi-Language Support:** Summaries can be translated into over 10 different languages using the Google Translate API. Translations for languages other than English and Hindi are a premium feature.
 *   **Text-to-Speech (TTS):** Generated summaries can be converted into audio and played back in the browser. This feature is powered by a dedicated Python microservice and is available only to subscribed users.
+
+*   **Dynamic Flowchart Generation:** Based on the uploaded policy document, the system automatically generates a visual flow diagram using Mermaid.js. This diagram provides a clear, structural overview of the policy's processes or logic. Users can interact with the diagram by zooming in/out and scrolling to explore details. The flowchart is also seamlessly integrated into the PDF download, ensuring that the visual representation is preserved in the exported document.
 *   **Subscription Model:** The application uses a freemium model. Basic summarization (up to 700 words in English or Hindi) is free. Premium features are unlocked with a monthly or yearly subscription, handled securely via Razorpay.
     *   **Premium Features Include:**
         *   Longer summaries (1000+ words).
