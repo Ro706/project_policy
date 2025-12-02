@@ -10,6 +10,7 @@ const Home = () => {
   const [fileName, setFileName] = useState("");
   const [summary, setSummary] = useState("");
   const [mermaidCode, setMermaidCode] = useState("");
+  const [mermaidSvg, setMermaidSvg] = useState(null); // Store SVG for PDF
   const [summaryError, setSummaryError] = useState(false);
   const [translatedSummary, setTranslatedSummary] = useState("");
   const [loading, setLoading] = useState(false);
@@ -143,11 +144,12 @@ const Home = () => {
     }
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!summary) return;
     
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     const maxWidth = pageWidth - 2 * margin;
     
@@ -158,13 +160,73 @@ const Home = () => {
     doc.setFontSize(12);
     doc.setFont(undefined, 'normal');
     
+    // Add Summary Text
     const splitText = doc.splitTextToSize(summary, maxWidth);
     doc.text(splitText, margin, margin + 10);
     
+    // Calculate height of text block
+    const lineHeight = doc.getLineHeight() / doc.internal.scaleFactor; 
+    const textHeight = splitText.length * lineHeight * 1.15; // Approx line height factor
+    let currentY = margin + 10 + textHeight + 10; // Margin + Title + Text + Gap
+
+    // Add Flow Diagram if available
+    if (mermaidSvg) {
+      try {
+        // Convert SVG string to PNG via Canvas
+        const svgData = mermaidSvg;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        // Proper encoding for SVG data URL
+        const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+        const url = URL.createObjectURL(svgBlob);
+
+        await new Promise((resolve, reject) => {
+          img.onload = () => {
+            // Set canvas size to match image (or scaled)
+            canvas.width = img.width * 2; // High res
+            canvas.height = img.height * 2;
+            ctx.scale(2, 2);
+            ctx.fillStyle = 'white'; // PDF needs white background usually
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            
+            const imgData = canvas.toDataURL('image/png');
+            
+            // Calculate dimensions for PDF
+            // Fit width to page margins, keep aspect ratio
+            const imgProps = doc.getImageProperties(imgData);
+            const pdfImgWidth = maxWidth;
+            const pdfImgHeight = (imgProps.height * pdfImgWidth) / imgProps.width;
+
+            // Check if new page is needed
+            if (currentY + pdfImgHeight > pageHeight - margin) {
+               doc.addPage();
+               currentY = margin;
+            }
+
+            doc.text("Flow Diagram:", margin, currentY);
+            doc.addImage(imgData, 'PNG', margin, currentY + 5, pdfImgWidth, pdfImgHeight);
+            
+            URL.revokeObjectURL(url);
+            resolve();
+          };
+          img.onerror = reject;
+          img.src = url;
+        });
+      } catch (err) {
+        console.error("Error adding diagram to PDF:", err);
+        doc.text("(Diagram could not be generated in PDF)", margin, currentY);
+      }
+    }
+    
+    // Footer Date
     const date = new Date().toLocaleDateString();
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`Generated on ${date}`, margin, doc.internal.pageSize.getHeight() - 10);
+    // Position at bottom of current page (or next if filled)
+    doc.text(`Generated on ${date}`, margin, pageHeight - 10);
     
     doc.save('policy-summary.pdf');
   };
@@ -259,6 +321,7 @@ const Home = () => {
       setLoading(true);
       setSummary("");
       setMermaidCode("");
+      setMermaidSvg(null); // Reset SVG
       setTranslatedSummary("");
       setSummaryError(false);
       setAudioUrl(null);
@@ -388,7 +451,21 @@ const Home = () => {
               let code = Array.isArray(data) ? data[0]?.mermaid : data?.mermaid;
               
               if (code) {
-                  code = code.replace(/```mermaid/g, '').replace(/```/g, '').trim();
+                  // Try to extract code block if present
+                  const match = code.match(/```mermaid\s*([\s\S]*?)\s*```/i);
+                  if (match && match[1]) {
+                      code = match[1].trim();
+                  } else {
+                      code = code.replace(/```mermaid/gi, '').replace(/```/g, '').trim();
+                  }
+                  
+                  // Escape parentheses and single quotes inside node labels [label] to prevent syntax errors
+                  // Replaces ( with #40;, ) with #41;, and ' with #39; ONLY inside the square brackets
+                  code = code.replace(/\[([^\]]+)\]/g, (match, label) => {
+                      const escapedLabel = label.replace(/\(/g, '#40;').replace(/\)/g, '#41;').replace(/'/g, '#39;');
+                      return `[${escapedLabel}]`;
+                  });
+
                   setMermaidCode(code);
               }
           } catch (error) {
@@ -573,9 +650,9 @@ const Home = () => {
                        "Your summary will appear here."}
                     </p>
                     {mermaidCode && (
-                       <div className="mermaid-wrapper" style={{marginTop: '20px', borderTop: '1px solid #ddd', paddingTop: '10px'}}>
+                       <div className="mermaid-wrapper">
                          <h4>Flow Diagram</h4>
-                         <MermaidDiagram chart={mermaidCode} />
+                         <MermaidDiagram chart={mermaidCode} onRender={setMermaidSvg} />
                        </div>
                     )}
                   </div>
@@ -630,5 +707,4 @@ const Home = () => {
     </div>
   );
 };
-
 export default Home;

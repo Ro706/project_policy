@@ -138,13 +138,15 @@ select {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  height: 300px;
+  min-height: 400px; /* Increased height for diagram */
+  max-height: 50vh; /* Prevent it from being too tall on large screens */
 }
 
 .scrollable-output {
   overflow-y: auto;
   flex: 1;
   margin-bottom: 10px;
+  padding-right: 5px; /* Prevent scrollbar overlap */
 }
 
 .scrollable-output::-webkit-scrollbar {
@@ -155,6 +157,30 @@ select {
   background-color: #4a7eff;
   border-radius: 3px;
 }
+
+.mermaid-wrapper {
+  margin-top: 20px;
+  border-top: 1px solid #2b3152;
+  padding-top: 15px;
+}
+
+.mermaid-wrapper h4 {
+  margin-bottom: 10px;
+  color: #a0aaec;
+}
+
+.mermaid-container {
+  background: #f8f9fa; /* Light background for diagram visibility */
+  border-radius: 8px;
+  padding: 10px;
+  overflow-x: auto; /* Allow horizontal scroll for wide diagrams */
+  display: flex;
+  justify-content: center;
+  min-height: 200px;
+}
+
+/* Dark mode support if mermaid renders dark diagrams, but usually it needs light background */
+/* If using dark theme mermaid, change background above */
 
 .summary-text {
   white-space: pre-wrap;
@@ -270,6 +296,15 @@ select {
     padding: 15px;
   }
 
+  .output-box {
+    min-height: 400px;
+    max-height: none;
+  }
+
+  .mermaid-container {
+    padding: 5px;
+  }
+
   body {
     margin-top: 120px;
   }
@@ -286,6 +321,15 @@ select {
 
   .header p {
     font-size: 0.9rem;
+  }
+
+  .output-box {
+    padding: 15px;
+  }
+  
+  .mermaid-wrapper {
+    margin-top: 15px;
+    padding-top: 10px;
   }
 
   .word-buttons button {
