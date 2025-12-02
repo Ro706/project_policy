@@ -355,7 +355,7 @@ select:focus {
   min-height: 300px;
   /* display: grid; Remove grid, it can behave oddly with overflow */
   display: flex;
-  justify-content: center; /* Center content initially */
+  /* justify-content: center; REMOVED to fix left-side clipping on zoom */
   align-items: flex-start; /* Allow content to grow down */
   border: 1px solid #d1d5db;
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
@@ -367,6 +367,7 @@ select:focus {
   justify-content: center;
   transition: min-width 0.2s ease-out;
   width: 100%; /* Ensure it takes width */
+  margin: auto; /* ADDED: This centers the content safely, preventing left-side clipping */
 }
 
 /* Force SVG to be responsive */
