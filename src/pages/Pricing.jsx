@@ -165,7 +165,6 @@ const Pricing = () => {
               // The backend verify-payment calculates signature based on `razorpay_order_id` and `razorpay_payment_id`.
               // It does NOT use `req.body.amount` for signature verification. It uses it just to save to DB.
               // So, we can send `amount: amount` (target plan price) here to ensure DB has the correct plan tag.
-              amount: amount, 
               currency: order.currency,
             }),
           });

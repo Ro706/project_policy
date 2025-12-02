@@ -1,0 +1,279 @@
+{
+  "name": "mermaid flow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "703361df-aa5d-47e7-8b5a-f3e1cea4acc1",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -352,
+        -32
+      ],
+      "id": "9c1adac8-9b98-4223-b0c8-d5867cc79bc7",
+      "name": "Webhook",
+      "webhookId": "703361df-aa5d-47e7-8b5a-f3e1cea4acc1"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        -32
+      ],
+      "id": "fff2aa80-7a0a-41c9-b468-9e89d91256c4",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert at converting text into structured flowcharts.\n\nTASK:\nRead the following summary and generate a clean, readable Mermaid flowchart.\n\nREQUIREMENTS:\n- Output ONLY Mermaid code.\n- Use `flowchart TD` unless the process is hierarchical.\n- Convert steps into clear nodes and arrows.\n- Use short node labels.\n- No explanation, no backticks.\n\nINPUT:\n{{ $json.text }}\n\nOUTPUT:\n(Only the Mermaid flowchart code)\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        -48
+      ],
+      "id": "93bdbff7-207d-418b-89fa-c08fd2a5179e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        128,
+        192
+      ],
+      "id": "acf2d02b-e51b-41db-92cd-3d1acdb79b8a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Gdu1GmJvatAyagkm",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "649116c9-65bb-4f80-96f5-877d54b394d4",
+              "name": "mermaid",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        -48
+      ],
+      "id": "4802a7f4-8d5e-436d-8109-c2c3b804c127",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        704,
+        -48
+      ],
+      "id": "14889d6f-6cd4-4ddd-a59d-764ce90359f6",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger",
+        "height": 192,
+        "width": 352
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -560,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "df83cf78-9968-4e4a-afcf-362e7fb98d1d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## data extracting",
+        "height": 192,
+        "width": 272,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -208,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "4427fb64-6c3d-49ad-90ea-6afea684e21f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## AI agent \nsending all Data to get proper flow diagram from the data",
+        "height": 464,
+        "width": 336,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        64,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "4ab1757b-122a-400e-bbbb-9bfb987655e0",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Rename\nRenaming field name",
+        "height": 224,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "e8dc8f7f-c3c6-43cc-8eca-9483b44f81e8",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger response",
+        "height": 192,
+        "width": 256
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        640,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "70fcab83-1e11-4118-94fa-52c1747dd454",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Work Space",
+        "height": 496,
+        "width": 1488,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -576,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "703124c4-4f74-4e48-bf5f-43cf7d94d7dc",
+      "name": "Sticky Note5"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "executionTimeout": 180,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "errorWorkflow": "8wfFwAOom2izM5TO",
+    "timeSavedPerExecution": 5
+  },
+  "versionId": "e8cb5044-61ae-4cd4-b879-1c0917ea6ee5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f6222274b4cb72740eaed902916eb76a286d1ef234308e6d1d84d668a1c7f812"
+  },
+  "id": "5bzDvIvKJMV55Q0W",
+  "tags": []
+}

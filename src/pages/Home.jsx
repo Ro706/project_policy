@@ -2,12 +2,17 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../home.css";
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas'; // Import html2canvas
 import useScript from "../hooks/useScript";
+import MermaidDiagram from "../components/MermaidDiagram";
+// Removed Canvg import as it is replaced by html2canvas
 
 const Home = () => {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
   const [summary, setSummary] = useState("");
+  const [mermaidCode, setMermaidCode] = useState("");
+  const [mermaidSvg, setMermaidSvg] = useState(null); // Store SVG for PDF
   const [summaryError, setSummaryError] = useState(false);
   const [translatedSummary, setTranslatedSummary] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,9 +24,12 @@ const Home = () => {
   const [audioUrl, setAudioUrl] = useState(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   const navigate = useNavigate();
   const razorpayScriptStatus = useScript('https://checkout.razorpay.com/v1/checkout.js');
+  const mermaidRef = useRef(null); // Ref for html2canvas capture
 
   // Language configuration with ISO codes and native names
   const languageConfig = {
@@ -141,30 +149,194 @@ const Home = () => {
     }
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!summary) return;
     
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
-    const maxWidth = pageWidth - 2 * margin;
-    
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.text('Policy Summary', margin, margin);
-    
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'normal');
-    
-    const splitText = doc.splitTextToSize(summary, maxWidth);
-    doc.text(splitText, margin, margin + 10);
-    
-    const date = new Date().toLocaleDateString();
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Generated on ${date}`, margin, doc.internal.pageSize.getHeight() - 10);
-    
-    doc.save('policy-summary.pdf');
+    setIsDownloading(true); // Start loading state
+
+    // Allow UI to update before starting heavy task
+    setTimeout(async () => {
+      try {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 20;
+        const maxWidth = pageWidth - 2 * margin;
+        
+        // Helper to check if text fits on page
+        let currentY = margin;
+        const checkPageBreak = (heightToAdd) => {
+          if (currentY + heightToAdd > pageHeight - margin) {
+            doc.addPage();
+            currentY = margin;
+            return true;
+          }
+          return false;
+        };
+
+        // --- 1. Title ---
+        doc.setFontSize(18);
+        doc.setFont(undefined, 'bold');
+        doc.text('Policy Summary', margin, currentY);
+        currentY += 15;
+        
+        // --- 2. Formatted Summary Text ---
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'normal');
+        
+        const lineHeight = 7; // approximate line height for size 12
+        
+        // Pre-split text by newlines to handle paragraphs
+        const lines = summary.split('\n');
+
+        lines.forEach((line) => {
+          let text = line.trim();
+          if (!text) {
+            currentY += lineHeight / 2; // Small gap for empty lines
+            return; 
+          }
+
+          // Check for bullet points
+          let isBullet = false;
+          if (text.startsWith('* ') || text.startsWith('- ')) {
+            isBullet = true;
+            text = text.substring(2).trim();
+          }
+
+          // Calculate indentation and width
+          const indent = isBullet ? 10 : 0;
+          const availableWidth = maxWidth - indent;
+          const startX = margin + indent;
+
+          // Draw Bullet
+          if (isBullet) {
+            doc.text('•', margin + 3, currentY);
+          }
+
+          // Tokenize for Bold (**text**)
+          const parts = text.split(/\*\*(.*?)\*\*/g); 
+          
+          let wordsWithStyle = [];
+          parts.forEach((part, index) => {
+             const bold = index % 2 === 1; // odd indices are inside **
+             const words = part.split(' ');
+             words.forEach((w, i) => {
+                if(w) wordsWithStyle.push({ text: w, bold: bold });
+                if(i < words.length - 1 || index < parts.length - 1) {
+                    wordsWithStyle.push({ text: ' ', bold: bold }); 
+                }
+             });
+          });
+
+          // Render Words
+          let currentLineX = startX;
+          
+          wordsWithStyle.forEach(({ text: word, bold }) => {
+            doc.setFont(undefined, bold ? 'bold' : 'normal');
+            const wordWidth = doc.getTextWidth(word);
+
+            if (currentLineX + wordWidth > margin + maxWidth) {
+              currentY += lineHeight;
+              checkPageBreak(lineHeight);
+              currentLineX = startX; 
+            }
+
+            doc.text(word, currentLineX, currentY);
+            currentLineX += wordWidth;
+          });
+
+          currentY += lineHeight * 1.5; 
+          checkPageBreak(lineHeight);
+        });
+
+        currentY += 10; 
+
+        // --- 3. Flow Diagram ---
+        if (mermaidCode && mermaidRef.current) {
+          try {
+            const canvas = await html2canvas(mermaidRef.current, {
+              scale: 2, // High resolution
+              backgroundColor: '#ffffff', // Force white background
+              logging: false,
+              onclone: (clonedDoc) => {
+                  // CSS adjustments for the PDF snapshot
+                  const element = clonedDoc.querySelector('.mermaid-wrapper');
+                  if (element) {
+                      // Force black text for visibility on white background
+                      const texts = element.querySelectorAll('text, tspan, .label, .nodeLabel, span');
+                      texts.forEach(t => {
+                          t.style.fill = '#000000';
+                          t.style.color = '#000000';
+                          t.style.stroke = 'none';
+                      });
+                      const paths = element.querySelectorAll('path, line, circle, rect, polygon');
+                      paths.forEach(p => {
+                          // Ensure lines are visible (dark grey/black)
+                          if (getComputedStyle(p).stroke !== 'none') {
+                              p.style.stroke = '#333333';
+                          }
+                          // Ensure no white fills disappear
+                          if (getComputedStyle(p).fill === 'rgb(255, 255, 255)') {
+                              p.style.fill = '#ffffff';
+                          }
+                      });
+                  }
+              }
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const imgProps = doc.getImageProperties(imgData);
+            
+            // Calculate dimensions for PDF
+            let finalWidth = maxWidth;
+            let finalHeight = (imgProps.height * finalWidth) / imgProps.width;
+            const titleHeight = 10; 
+            
+            // Page Break Logic
+            if (currentY + finalHeight + titleHeight > pageHeight - margin) {
+                if (currentY > margin + 5) { 
+                    doc.addPage();
+                    currentY = margin;
+                }
+            }
+            
+            // Fit to Page Logic
+            const availableHeight = pageHeight - currentY - margin;
+            if (finalHeight + titleHeight > availableHeight) {
+                const maxAllowedHeight = availableHeight - titleHeight;
+                const scaleRatio = maxAllowedHeight / finalHeight;
+                finalHeight = maxAllowedHeight;
+                finalWidth = finalWidth * scaleRatio; 
+            }
+
+            doc.setFont(undefined, 'bold');
+            doc.text("Flow Diagram:", margin, currentY);
+            doc.addImage(imgData, 'PNG', margin, currentY + 5, finalWidth, finalHeight);
+
+          } catch (err) {
+            console.error("Error preparing diagram for PDF:", err);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(255, 0, 0);
+            doc.text("(Diagram export failed)", margin, currentY);
+            doc.setTextColor(0, 0, 0);
+          }
+        }
+        
+        // Footer
+        const date = new Date().toLocaleDateString();
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        const lastY = doc.internal.pageSize.getHeight() - 10;
+        doc.text(`Generated on ${date}`, margin, lastY);
+        
+        doc.save('policy-summary.pdf');
+      } catch (error) {
+        console.error("PDF generation error:", error);
+        alert("Failed to generate PDF.");
+      } finally {
+        setIsDownloading(false); // End loading state
+      }
+    }, 100);
   };
 
   const handlePayment = async (onSuccess) => {
@@ -256,113 +428,186 @@ const Home = () => {
     const performSubmit = async () => {
       setLoading(true);
       setSummary("");
+      setMermaidCode("");
+      setMermaidSvg(null); // Reset SVG
       setTranslatedSummary("");
       setSummaryError(false);
       setAudioUrl(null);
 
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("wordLimit", wordLimit);
+      formData.append("language", language);
+
+      // --- Fetch 1: Summary ---
+      const fetchSummary = async () => {
+          try {
+            const response = await fetch(
+              "http://localhost:5678/webhook/8e4885d1-670f-4fad-9e45-4022f25d3fd7",
+              {
+                method: "POST",
+                body: formData,
+                mode: "cors",
+                headers: { Accept: "application/json, text/plain" },
+              }
+            );
+
+            if (!response.ok) {
+              throw new Error(`Summary HTTP error! status: ${response.status}`);
+            }
+      
+            const contentType = response.headers.get("content-type");
+            let summaryText = "";
+
+            if (contentType && contentType.includes("application/json")) {
+              const json = await response.json();
+              // The user specified the format is: [{ useroutput: "...", chatbot: "..." }]
+              if (Array.isArray(json) && json.length > 0 && json[1].useroutput) {
+                summaryText = json[1].useroutput;
+              } else {
+                // Fallback for unexpected JSON structure
+                summaryText = JSON.stringify(json, null, 2);
+              }
+            } else {
+              summaryText = await response.text();
+            }
+      
+            summaryText = summaryText.trim() || "✅ Summary generated successfully.";
+            setSummary(summaryText);
+
+            // --- NEW: Save the summary as the context for the chatbot ---
+            try {
+              const token = localStorage.getItem("token");
+              await fetch("http://localhost:5000/api/chatbot/session", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "auth-token": token,
+                },
+                body: JSON.stringify({ context: summaryText }),
+              });
+              console.log("Chatbot context updated successfully.");
+            } catch (error) {
+              console.error("Error updating chatbot context:", error);
+            }
+
+            // --- FIX for 9-minute audio delay ---
+            // Only send a short snippet of the summary to the TTS service to prevent timeouts.
+            const ttsSnippet = summaryText.substring(0, 250); // Send first 250 chars for audio
+            console.log("Sending truncated snippet to TTS service:", ttsSnippet);
+
+            try {
+              const ttsResponse = await fetch("http://localhost:5001/api/tts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  text: ttsSnippet, // Use the short snippet
+                  lang: languageConfig[language].translateCode,
+                }),
+              });
+              const blob = await ttsResponse.blob();
+              const url = URL.createObjectURL(blob);
+              setAudioUrl(url);
+            } catch (error) {
+              console.error("Error pre-fetching audio:", error);
+            }
+
+            // Save the FULL summary to the database
+            try {
+              const token = localStorage.getItem("token");
+              await fetch("http://localhost:5000/api/summary/add", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "auth-token": token,
+                },
+                body: JSON.stringify({ summaryText, wordLimit, language }),
+              });
+            } catch (error) {
+              console.error("Error saving summary:", error);
+            }
+
+            if (language !== 'English') {
+              const translated = await translateText(summaryText, language);
+              setTranslatedSummary(translated);
+            }
+        } catch (error) {
+            console.error("❌ Summary Upload error:", error);
+            const errorMessage = "❌ Upload failed. Please check your webhook connection.";
+            setSummary(errorMessage);
+            setTranslatedSummary(errorMessage);
+            setSummaryError(true);
+        }
+      };
+
+      // --- Fetch 2: Mermaid Diagram ---
+      const fetchMermaid = async () => {
+          try {
+              const response = await fetch(
+                "http://localhost:5678/webhook/703361df-aa5d-47e7-8b5a-f3e1cea4acc1",
+                {
+                    method: "POST",
+                    body: formData, // Sending same file/data
+                    mode: "cors",
+                }
+              );
+              
+              if (!response.ok) throw new Error("Mermaid webhook failed");
+              const data = await response.json();
+              
+              // Expecting: { mermaid: "..." } or [{ mermaid: "..." }]
+              let code = Array.isArray(data) ? data[0]?.mermaid : data?.mermaid;
+              
+              if (code) {
+                  // 1. Try to extract code block if present
+                  const match = code.match(/```mermaid\s*([\s\S]*?)\s*```/i);
+                  if (match && match[1]) {
+                      code = match[1].trim();
+                  } else {
+                      code = code.replace(/```mermaid/gi, '').replace(/```/g, '').trim();
+                  }
+                  
+                  // 2. Find start of diagram if there's conversational text
+                  const typeMatch = code.match(/^(graph|flowchart)\s+[A-Z]+/im);
+                  if (typeMatch && typeMatch.index > 0) {
+                      code = code.substring(typeMatch.index);
+                  }
+
+                  // 3. Sanitize specific problematic lines and LLM hallucinations
+                  const cleanedLines = code.split('\n').map(line => {
+                      // Remove LLM error message trailing text from a line
+                      line = line.replace(/\s*---\s*\^ Expecting[\s\S]*/, ''); // Matches "---^ Expecting..."
+                      line = line.replace(/\s*Syntax error in text[\s\S]*/, ''); // "Syntax error in text"
+                      line = line.replace(/\s*mermaid version[\s\S]*/, ''); // "mermaid version"
+                      
+                      // Attempt to fix malformed node definitions like `ID(Label))ID -->`
+                      // Example: E1_6(ICT))E1_6 --> E1_6
+                      // This looks for a closing bracket, then optional space, then a potential node ID, then -->
+                      // If found, it removes the redundant ID part that immediately follows the closing bracket of a node label
+                      line = line.replace(/(\)|])\s*([A-Z0-9_]+)\s*-->/i, '$1 -->'); 
+                      
+                      return line.trim();
+                  }).filter(line => line.length > 0); // Remove empty lines
+
+                  code = cleanedLines.join('\n');
+
+                  // 4. Escape parentheses and single quotes inside node labels [label]
+                  code = code.replace(/\[([^\]]+)\]/g, (match, label) => {
+                      const escapedLabel = label.replace(/\(/g, '#40;').replace(/\)/g, '#41;').replace(/'/g, '#39;');
+                      return `[${escapedLabel}]`;
+                  });
+
+                  setMermaidCode(code);
+              }
+          } catch (error) {
+              console.error("Mermaid fetch error:", error);
+          }
+      };
+
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("wordLimit", wordLimit);
-        formData.append("language", language);
-
-        const response = await fetch(
-          "http://localhost:5678/webhook/8e4885d1-670f-4fad-9e45-4022f25d3fd7",
-          {
-            method: "POST",
-            body: formData,
-            mode: "cors",
-            headers: { Accept: "application/json, text/plain" },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-  
-        const contentType = response.headers.get("content-type");
-        let summaryText = "";
-
-        if (contentType && contentType.includes("application/json")) {
-          const json = await response.json();
-          // The user specified the format is: [{ useroutput: "...", chatbot: "..." }]
-          if (Array.isArray(json) && json.length > 0 && json[1].useroutput) {
-            summaryText = json[1].useroutput;
-          } else {
-            // Fallback for unexpected JSON structure
-            summaryText = JSON.stringify(json, null, 2);
-          }
-        } else {
-          summaryText = await response.text();
-        }
-  
-        summaryText = summaryText.trim() || "✅ Summary generated successfully.";
-        setSummary(summaryText);
-
-        // --- NEW: Save the summary as the context for the chatbot ---
-        try {
-          const token = localStorage.getItem("token");
-          await fetch("http://localhost:5000/api/chatbot/session", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "auth-token": token,
-            },
-            body: JSON.stringify({ context: summaryText }),
-          });
-          console.log("Chatbot context updated successfully.");
-        } catch (error) {
-          console.error("Error updating chatbot context:", error);
-        }
-
-        // --- FIX for 9-minute audio delay ---
-        // Only send a short snippet of the summary to the TTS service to prevent timeouts.
-        const ttsSnippet = summaryText.substring(0, 250); // Send first 250 chars for audio
-        console.log("Sending truncated snippet to TTS service:", ttsSnippet);
-
-        try {
-          const ttsResponse = await fetch("http://localhost:5001/api/tts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              text: ttsSnippet, // Use the short snippet
-              lang: languageConfig[language].translateCode,
-            }),
-          });
-          const blob = await ttsResponse.blob();
-          const url = URL.createObjectURL(blob);
-          setAudioUrl(url);
-        } catch (error) {
-          console.error("Error pre-fetching audio:", error);
-        }
-
-        // Save the FULL summary to the database
-        try {
-          const token = localStorage.getItem("token");
-          await fetch("http://localhost:5000/api/summary/add", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "auth-token": token,
-            },
-            body: JSON.stringify({ summaryText, wordLimit, language }),
-          });
-        } catch (error) {
-          console.error("Error saving summary:", error);
-        }
-
-        if (language !== 'English') {
-          const translated = await translateText(summaryText, language);
-          setTranslatedSummary(translated);
-        }
-      } catch (error) {
-        console.error("❌ Upload error:", error);
-        const errorMessage = "❌ Upload failed. Please check your webhook connection.";
-        setSummary(errorMessage);
-        setTranslatedSummary(errorMessage);
-        setSummaryError(true);
+          await Promise.all([fetchSummary(), fetchMermaid()]);
       } finally {
-        setLoading(false);
+          setLoading(false);
       }
     };
 
@@ -520,7 +765,7 @@ const Home = () => {
             <div className="output-box">
               {loading ? (
                 <div className="interactive-loader">
-                  <div className="spinner"></div>
+                  {/*<div className="spinner"></div>*/}
                   <p className="loader-text">{loadingText} 🧠</p>
                   <div className="progress-bar">
                     <div className="progress"></div>
@@ -558,9 +803,9 @@ const Home = () => {
                         <button
                           className="audio-btn download"
                           onClick={handleDownloadPDF}
-                          disabled={!summary}
+                          disabled={!summary || isDownloading}
                         >
-                          📥 Download PDF
+                          {isDownloading ? '⏳ Generating...' : '📥 Download PDF'}
                         </button>
                       </div>
 
@@ -582,9 +827,28 @@ const Home = () => {
             </div>
           </div>
         </div>
+
+        {/* Flow Diagram Section - Moved Below */}
+        {mermaidCode && (
+          <div className="flow-diagram-section">
+            <div className="diagram-header">
+              <h4>Flow Diagram</h4>
+              <div className="zoom-controls">
+                <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} title="Zoom Out">➖</button>
+                <span>{Math.round(zoom * 100)}%</span>
+                <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} title="Zoom In">➕</button>
+                <button onClick={() => setZoom(1)} title="Reset Zoom">🔄</button>
+              </div>
+            </div>
+            <div className="mermaid-scroll-container">
+              <div className="mermaid-wrapper" ref={mermaidRef} style={{ minWidth: `${zoom * 100}%` }}>
+                <MermaidDiagram chart={mermaidCode} onRender={setMermaidSvg} />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
-
 export default Home;
