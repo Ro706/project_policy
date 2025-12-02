@@ -348,12 +348,38 @@ select:focus {
 }
 
 .mermaid-scroll-container {
-  background: #ffffff; /* Clean white background for diagram legibility */
-  border-radius: 12px;
+  overflow: auto; /* Allow scrolling */
   padding: 20px;
-  margin-top: 15px;
+  background: #ffffff; /* Clean white background */
+  border-radius: 10px;
+  min-height: 300px;
+  /* display: grid; Remove grid, it can behave oddly with overflow */
+  display: flex;
+  justify-content: center; /* Center content initially */
+  align-items: flex-start; /* Allow content to grow down */
   border: 1px solid #d1d5db;
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.mermaid-wrapper {
+  /* minWidth set inline by Zoom */
+  display: flex;
+  justify-content: center;
+  transition: min-width 0.2s ease-out;
+  width: 100%; /* Ensure it takes width */
+}
+
+/* Force SVG to be responsive */
+.mermaid-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.mermaid-container svg {
+  width: 100% !important;
+  height: auto !important;
+  max-width: none !important;
 }
 
 /* Loader */

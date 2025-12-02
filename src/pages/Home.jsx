@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../home.css";
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas'; // Import html2canvas
 import useScript from "../hooks/useScript";
 import MermaidDiagram from "../components/MermaidDiagram";
+// Removed Canvg import as it is replaced by html2canvas
 
 const Home = () => {
   const [file, setFile] = useState(null);
@@ -23,9 +25,11 @@ const Home = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState(null);
   const [zoom, setZoom] = useState(1);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   const navigate = useNavigate();
   const razorpayScriptStatus = useScript('https://checkout.razorpay.com/v1/checkout.js');
+  const mermaidRef = useRef(null); // Ref for html2canvas capture
 
   // Language configuration with ISO codes and native names
   const languageConfig = {
@@ -148,199 +152,191 @@ const Home = () => {
   const handleDownloadPDF = async () => {
     if (!summary) return;
     
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 20;
-    const maxWidth = pageWidth - 2 * margin;
-    
-    // Helper to check if text fits on page
-    let currentY = margin;
-    const checkPageBreak = (heightToAdd) => {
-      if (currentY + heightToAdd > pageHeight - margin) {
-        doc.addPage();
-        currentY = margin;
-        return true;
-      }
-      return false;
-    };
+    setIsDownloading(true); // Start loading state
 
-    // --- 1. Title ---
-    doc.setFontSize(18);
-    doc.setFont(undefined, 'bold');
-    doc.text('Policy Summary', margin, currentY);
-    currentY += 15;
-    
-    // --- 2. Formatted Summary Text ---
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'normal');
-    
-    const lineHeight = 7; // approximate line height for size 12
-    
-    // Pre-split text by newlines to handle paragraphs
-    const lines = summary.split('\n');
-
-    lines.forEach((line) => {
-      let text = line.trim();
-      if (!text) {
-        currentY += lineHeight / 2; // Small gap for empty lines
-        return; 
-      }
-
-      // Check for bullet points
-      let isBullet = false;
-      if (text.startsWith('* ') || text.startsWith('- ')) {
-        isBullet = true;
-        text = text.substring(2).trim();
-      }
-
-      // Calculate indentation and width
-      const indent = isBullet ? 10 : 0;
-      const availableWidth = maxWidth - indent;
-      const startX = margin + indent;
-
-      // Draw Bullet
-      if (isBullet) {
-        doc.text('•', margin + 3, currentY);
-      }
-
-      // Tokenize for Bold (**text**)
-      // "Normal **Bold** Normal" -> ["Normal ", "Bold", " Normal"]
-      const parts = text.split(/\*\*(.*?)\*\*/g); 
-      
-      // We need to process parts and wrap text manually
-      // This is complex in jsPDF without HTML. 
-      // Simplified approach: 
-      // 1. Reconstruct the line with styling markers 
-      // 2. Or just print plain text if wrapping is hard.
-      // Robust Approach: recursive word wrapping.
-      
-      let buffer = []; // words to print
-      let isBold = false;
-      
-      // Flatten parts into words with style info
-      let wordsWithStyle = [];
-      parts.forEach((part, index) => {
-         const bold = index % 2 === 1; // odd indices are inside **
-         const words = part.split(' ');
-         words.forEach((w, i) => {
-            if(w) wordsWithStyle.push({ text: w, bold: bold });
-            // Add space after word if it wasn't the last in part, or if next part exists
-            if(i < words.length - 1 || index < parts.length - 1) {
-                wordsWithStyle.push({ text: ' ', bold: bold }); 
-            }
-         });
-      });
-
-      // Render Words
-      let currentLineX = startX;
-      
-      wordsWithStyle.forEach(({ text: word, bold }) => {
-        doc.setFont(undefined, bold ? 'bold' : 'normal');
-        const wordWidth = doc.getTextWidth(word);
-
-        if (currentLineX + wordWidth > margin + maxWidth) {
-          // New Line
-          currentY += lineHeight;
-          checkPageBreak(lineHeight);
-          currentLineX = startX; // Reset X (keep indent)
-        }
-
-        doc.text(word, currentLineX, currentY);
-        currentLineX += wordWidth;
-      });
-
-      currentY += lineHeight * 1.5; // End of paragraph/bullet
-      checkPageBreak(lineHeight);
-    });
-
-    currentY += 10; // Gap before diagram
-
-    // --- 3. Flow Diagram ---
-    if (mermaidSvg) {
+    // Allow UI to update before starting heavy task
+    setTimeout(async () => {
       try {
-        // 1. Parse the SVG string to get dimensions and ensure it's well-formed
-        const parser = new DOMParser();
-        const svgDoc = parser.parseFromString(mermaidSvg, "image/svg+xml");
-        const svgElement = svgDoc.documentElement;
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 20;
+        const maxWidth = pageWidth - 2 * margin;
         
-        // Get natural dimensions or fallback
-        let width = parseFloat(svgElement.getAttribute("width")) || 800;
-        let height = parseFloat(svgElement.getAttribute("height")) || 600;
+        // Helper to check if text fits on page
+        let currentY = margin;
+        const checkPageBreak = (heightToAdd) => {
+          if (currentY + heightToAdd > pageHeight - margin) {
+            doc.addPage();
+            currentY = margin;
+            return true;
+          }
+          return false;
+        };
+
+        // --- 1. Title ---
+        doc.setFontSize(18);
+        doc.setFont(undefined, 'bold');
+        doc.text('Policy Summary', margin, currentY);
+        currentY += 15;
         
-        // Ensure width/height are set in the SVG string for the Image to respect them
-        svgElement.setAttribute("width", width);
-        svgElement.setAttribute("height", height);
+        // --- 2. Formatted Summary Text ---
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'normal');
         
-        // Serializer to get the string back
-        const serializer = new XMLSerializer();
-        const svgString = serializer.serializeToString(svgElement);
+        const lineHeight = 7; // approximate line height for size 12
+        
+        // Pre-split text by newlines to handle paragraphs
+        const lines = summary.split('\n');
 
-        // 2. Use Base64 Data URI instead of Blob URL
-        // btoa(unescape(encodeURIComponent(...))) handles Unicode (emoji/special chars) correctly
-        const base64Svg = btoa(unescape(encodeURIComponent(svgString)));
-        const dataUrl = `data:image/svg+xml;base64,${base64Svg}`;
+        lines.forEach((line) => {
+          let text = line.trim();
+          if (!text) {
+            currentY += lineHeight / 2; // Small gap for empty lines
+            return; 
+          }
 
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
+          // Check for bullet points
+          let isBullet = false;
+          if (text.startsWith('* ') || text.startsWith('- ')) {
+            isBullet = true;
+            text = text.substring(2).trim();
+          }
 
-        await new Promise((resolve, reject) => {
-          img.onload = () => {
-            try {
-                // Set canvas size (High Res)
-                canvas.width = width * 3; 
-                canvas.height = height * 3;
-                ctx.scale(3, 3);
-                
-                // White background
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                const imgData = canvas.toDataURL('image/png');
-                
-                // Scale to fit PDF Page
-                const imgProps = doc.getImageProperties(imgData);
-                const pdfImgWidth = maxWidth;
-                const pdfImgHeight = (imgProps.height * pdfImgWidth) / imgProps.width;
+          // Calculate indentation and width
+          const indent = isBullet ? 10 : 0;
+          const availableWidth = maxWidth - indent;
+          const startX = margin + indent;
 
-                checkPageBreak(pdfImgHeight + 20);
+          // Draw Bullet
+          if (isBullet) {
+            doc.text('•', margin + 3, currentY);
+          }
 
-                doc.setFont(undefined, 'bold');
-                doc.text("Flow Diagram:", margin, currentY);
-                doc.addImage(imgData, 'PNG', margin, currentY + 5, pdfImgWidth, pdfImgHeight);
-                resolve();
-            } catch (innerErr) {
-                console.error("Canvas export failed:", innerErr);
-                doc.setFont(undefined, 'normal');
-                doc.setTextColor(255, 0, 0);
-                doc.text("(Diagram export blocked by browser security)", margin, currentY);
-                doc.setTextColor(0, 0, 0);
-                resolve(); 
+          // Tokenize for Bold (**text**)
+          const parts = text.split(/\*\*(.*?)\*\*/g); 
+          
+          let wordsWithStyle = [];
+          parts.forEach((part, index) => {
+             const bold = index % 2 === 1; // odd indices are inside **
+             const words = part.split(' ');
+             words.forEach((w, i) => {
+                if(w) wordsWithStyle.push({ text: w, bold: bold });
+                if(i < words.length - 1 || index < parts.length - 1) {
+                    wordsWithStyle.push({ text: ' ', bold: bold }); 
+                }
+             });
+          });
+
+          // Render Words
+          let currentLineX = startX;
+          
+          wordsWithStyle.forEach(({ text: word, bold }) => {
+            doc.setFont(undefined, bold ? 'bold' : 'normal');
+            const wordWidth = doc.getTextWidth(word);
+
+            if (currentLineX + wordWidth > margin + maxWidth) {
+              currentY += lineHeight;
+              checkPageBreak(lineHeight);
+              currentLineX = startX; 
             }
-          };
-          img.onerror = (e) => {
-              console.error("Image load error", e);
-              resolve(); 
-          };
-          img.src = dataUrl;
+
+            doc.text(word, currentLineX, currentY);
+            currentLineX += wordWidth;
+          });
+
+          currentY += lineHeight * 1.5; 
+          checkPageBreak(lineHeight);
         });
 
-      } catch (err) {
-        console.error("Error preparing diagram for PDF:", err);
+        currentY += 10; 
+
+        // --- 3. Flow Diagram ---
+        if (mermaidCode && mermaidRef.current) {
+          try {
+            const canvas = await html2canvas(mermaidRef.current, {
+              scale: 2, // High resolution
+              backgroundColor: '#ffffff', // Force white background
+              logging: false,
+              onclone: (clonedDoc) => {
+                  // CSS adjustments for the PDF snapshot
+                  const element = clonedDoc.querySelector('.mermaid-wrapper');
+                  if (element) {
+                      // Force black text for visibility on white background
+                      const texts = element.querySelectorAll('text, tspan, .label, .nodeLabel, span');
+                      texts.forEach(t => {
+                          t.style.fill = '#000000';
+                          t.style.color = '#000000';
+                          t.style.stroke = 'none';
+                      });
+                      const paths = element.querySelectorAll('path, line, circle, rect, polygon');
+                      paths.forEach(p => {
+                          // Ensure lines are visible (dark grey/black)
+                          if (getComputedStyle(p).stroke !== 'none') {
+                              p.style.stroke = '#333333';
+                          }
+                          // Ensure no white fills disappear
+                          if (getComputedStyle(p).fill === 'rgb(255, 255, 255)') {
+                              p.style.fill = '#ffffff';
+                          }
+                      });
+                  }
+              }
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const imgProps = doc.getImageProperties(imgData);
+            
+            // Calculate dimensions for PDF
+            let finalWidth = maxWidth;
+            let finalHeight = (imgProps.height * finalWidth) / imgProps.width;
+            const titleHeight = 10; 
+            
+            // Page Break Logic
+            if (currentY + finalHeight + titleHeight > pageHeight - margin) {
+                if (currentY > margin + 5) { 
+                    doc.addPage();
+                    currentY = margin;
+                }
+            }
+            
+            // Fit to Page Logic
+            const availableHeight = pageHeight - currentY - margin;
+            if (finalHeight + titleHeight > availableHeight) {
+                const maxAllowedHeight = availableHeight - titleHeight;
+                const scaleRatio = maxAllowedHeight / finalHeight;
+                finalHeight = maxAllowedHeight;
+                finalWidth = finalWidth * scaleRatio; 
+            }
+
+            doc.setFont(undefined, 'bold');
+            doc.text("Flow Diagram:", margin, currentY);
+            doc.addImage(imgData, 'PNG', margin, currentY + 5, finalWidth, finalHeight);
+
+          } catch (err) {
+            console.error("Error preparing diagram for PDF:", err);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(255, 0, 0);
+            doc.text("(Diagram export failed)", margin, currentY);
+            doc.setTextColor(0, 0, 0);
+          }
+        }
+        
+        // Footer
+        const date = new Date().toLocaleDateString();
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        const lastY = doc.internal.pageSize.getHeight() - 10;
+        doc.text(`Generated on ${date}`, margin, lastY);
+        
+        doc.save('policy-summary.pdf');
+      } catch (error) {
+        console.error("PDF generation error:", error);
+        alert("Failed to generate PDF.");
+      } finally {
+        setIsDownloading(false); // End loading state
       }
-    }
-    
-    // Footer
-    const date = new Date().toLocaleDateString();
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    const lastY = doc.internal.pageSize.getHeight() - 10;
-    doc.text(`Generated on ${date}`, margin, lastY);
-    
-    doc.save('policy-summary.pdf');
+    }, 100);
   };
 
   const handlePayment = async (onSuccess) => {
@@ -563,7 +559,7 @@ const Home = () => {
               let code = Array.isArray(data) ? data[0]?.mermaid : data?.mermaid;
               
               if (code) {
-                  // Try to extract code block if present
+                  // 1. Try to extract code block if present
                   const match = code.match(/```mermaid\s*([\s\S]*?)\s*```/i);
                   if (match && match[1]) {
                       code = match[1].trim();
@@ -571,8 +567,31 @@ const Home = () => {
                       code = code.replace(/```mermaid/gi, '').replace(/```/g, '').trim();
                   }
                   
-                  // Escape parentheses and single quotes inside node labels [label] to prevent syntax errors
-                  // Replaces ( with #40;, ) with #41;, and ' with #39; ONLY inside the square brackets
+                  // 2. Find start of diagram if there's conversational text
+                  const typeMatch = code.match(/^(graph|flowchart)\s+[A-Z]+/im);
+                  if (typeMatch && typeMatch.index > 0) {
+                      code = code.substring(typeMatch.index);
+                  }
+
+                  // 3. Sanitize specific problematic lines and LLM hallucinations
+                  const cleanedLines = code.split('\n').map(line => {
+                      // Remove LLM error message trailing text from a line
+                      line = line.replace(/\s*---\s*\^ Expecting[\s\S]*/, ''); // Matches "---^ Expecting..."
+                      line = line.replace(/\s*Syntax error in text[\s\S]*/, ''); // "Syntax error in text"
+                      line = line.replace(/\s*mermaid version[\s\S]*/, ''); // "mermaid version"
+                      
+                      // Attempt to fix malformed node definitions like `ID(Label))ID -->`
+                      // Example: E1_6(ICT))E1_6 --> E1_6
+                      // This looks for a closing bracket, then optional space, then a potential node ID, then -->
+                      // If found, it removes the redundant ID part that immediately follows the closing bracket of a node label
+                      line = line.replace(/(\)|])\s*([A-Z0-9_]+)\s*-->/i, '$1 -->'); 
+                      
+                      return line.trim();
+                  }).filter(line => line.length > 0); // Remove empty lines
+
+                  code = cleanedLines.join('\n');
+
+                  // 4. Escape parentheses and single quotes inside node labels [label]
                   code = code.replace(/\[([^\]]+)\]/g, (match, label) => {
                       const escapedLabel = label.replace(/\(/g, '#40;').replace(/\)/g, '#41;').replace(/'/g, '#39;');
                       return `[${escapedLabel}]`;
@@ -582,7 +601,6 @@ const Home = () => {
               }
           } catch (error) {
               console.error("Mermaid fetch error:", error);
-              // We don't show an error to user for this secondary feature
           }
       };
 
@@ -747,7 +765,7 @@ const Home = () => {
             <div className="output-box">
               {loading ? (
                 <div className="interactive-loader">
-                  <div className="spinner"></div>
+                  {/*<div className="spinner"></div>*/}
                   <p className="loader-text">{loadingText} 🧠</p>
                   <div className="progress-bar">
                     <div className="progress"></div>
@@ -785,9 +803,9 @@ const Home = () => {
                         <button
                           className="audio-btn download"
                           onClick={handleDownloadPDF}
-                          disabled={!summary}
+                          disabled={!summary || isDownloading}
                         >
-                          📥 Download PDF
+                          {isDownloading ? '⏳ Generating...' : '📥 Download PDF'}
                         </button>
                       </div>
 
@@ -823,7 +841,7 @@ const Home = () => {
               </div>
             </div>
             <div className="mermaid-scroll-container">
-              <div className="mermaid-wrapper" style={{ minWidth: `${zoom * 100}%` }}>
+              <div className="mermaid-wrapper" ref={mermaidRef} style={{ minWidth: `${zoom * 100}%` }}>
                 <MermaidDiagram chart={mermaidCode} onRender={setMermaidSvg} />
               </div>
             </div>
