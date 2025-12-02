@@ -22,6 +22,7 @@ const Home = () => {
   const [audioUrl, setAudioUrl] = useState(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState(null);
+  const [zoom, setZoom] = useState(1);
   
   const navigate = useNavigate();
   const razorpayScriptStatus = useScript('https://checkout.razorpay.com/v1/checkout.js');
@@ -436,7 +437,7 @@ const Home = () => {
       const fetchMermaid = async () => {
           try {
               const response = await fetch(
-                "http://localhost:5678/webhook-test/703361df-aa5d-47e7-8b5a-f3e1cea4acc1",
+                "http://localhost:5678/webhook/703361df-aa5d-47e7-8b5a-f3e1cea4acc1",
                 {
                     method: "POST",
                     body: formData, // Sending same file/data
@@ -649,12 +650,6 @@ const Home = () => {
                        (language === 'English' ? summary : translatedSummary) || 
                        "Your summary will appear here."}
                     </p>
-                    {mermaidCode && (
-                       <div className="mermaid-wrapper">
-                         <h4>Flow Diagram</h4>
-                         <MermaidDiagram chart={mermaidCode} onRender={setMermaidSvg} />
-                       </div>
-                    )}
                   </div>
 
                   {summary && !summaryError && (
@@ -703,6 +698,26 @@ const Home = () => {
             </div>
           </div>
         </div>
+
+        {/* Flow Diagram Section - Moved Below */}
+        {mermaidCode && (
+          <div className="flow-diagram-section">
+            <div className="diagram-header">
+              <h4>Flow Diagram</h4>
+              <div className="zoom-controls">
+                <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} title="Zoom Out">➖</button>
+                <span>{Math.round(zoom * 100)}%</span>
+                <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} title="Zoom In">➕</button>
+                <button onClick={() => setZoom(1)} title="Reset Zoom">🔄</button>
+              </div>
+            </div>
+            <div className="mermaid-scroll-container">
+              <div className="mermaid-wrapper" style={{ minWidth: `${zoom * 100}%` }}>
+                <MermaidDiagram chart={mermaidCode} onRender={setMermaidSvg} />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
