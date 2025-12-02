@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import "../home.css";
 import jsPDF from 'jspdf';
 import useScript from "../hooks/useScript";
+import MermaidDiagram from "../components/MermaidDiagram";
 
 const Home = () => {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
   const [summary, setSummary] = useState("");
+  const [mermaidCode, setMermaidCode] = useState("");
   const [summaryError, setSummaryError] = useState(false);
   const [translatedSummary, setTranslatedSummary] = useState("");
   const [loading, setLoading] = useState(false);
@@ -256,113 +258,149 @@ const Home = () => {
     const performSubmit = async () => {
       setLoading(true);
       setSummary("");
+      setMermaidCode("");
       setTranslatedSummary("");
       setSummaryError(false);
       setAudioUrl(null);
 
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("wordLimit", wordLimit);
+      formData.append("language", language);
+
+      // --- Fetch 1: Summary ---
+      const fetchSummary = async () => {
+          try {
+            const response = await fetch(
+              "http://localhost:5678/webhook/8e4885d1-670f-4fad-9e45-4022f25d3fd7",
+              {
+                method: "POST",
+                body: formData,
+                mode: "cors",
+                headers: { Accept: "application/json, text/plain" },
+              }
+            );
+
+            if (!response.ok) {
+              throw new Error(`Summary HTTP error! status: ${response.status}`);
+            }
+      
+            const contentType = response.headers.get("content-type");
+            let summaryText = "";
+
+            if (contentType && contentType.includes("application/json")) {
+              const json = await response.json();
+              // The user specified the format is: [{ useroutput: "...", chatbot: "..." }]
+              if (Array.isArray(json) && json.length > 0 && json[1].useroutput) {
+                summaryText = json[1].useroutput;
+              } else {
+                // Fallback for unexpected JSON structure
+                summaryText = JSON.stringify(json, null, 2);
+              }
+            } else {
+              summaryText = await response.text();
+            }
+      
+            summaryText = summaryText.trim() || "✅ Summary generated successfully.";
+            setSummary(summaryText);
+
+            // --- NEW: Save the summary as the context for the chatbot ---
+            try {
+              const token = localStorage.getItem("token");
+              await fetch("http://localhost:5000/api/chatbot/session", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "auth-token": token,
+                },
+                body: JSON.stringify({ context: summaryText }),
+              });
+              console.log("Chatbot context updated successfully.");
+            } catch (error) {
+              console.error("Error updating chatbot context:", error);
+            }
+
+            // --- FIX for 9-minute audio delay ---
+            // Only send a short snippet of the summary to the TTS service to prevent timeouts.
+            const ttsSnippet = summaryText.substring(0, 250); // Send first 250 chars for audio
+            console.log("Sending truncated snippet to TTS service:", ttsSnippet);
+
+            try {
+              const ttsResponse = await fetch("http://localhost:5001/api/tts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  text: ttsSnippet, // Use the short snippet
+                  lang: languageConfig[language].translateCode,
+                }),
+              });
+              const blob = await ttsResponse.blob();
+              const url = URL.createObjectURL(blob);
+              setAudioUrl(url);
+            } catch (error) {
+              console.error("Error pre-fetching audio:", error);
+            }
+
+            // Save the FULL summary to the database
+            try {
+              const token = localStorage.getItem("token");
+              await fetch("http://localhost:5000/api/summary/add", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "auth-token": token,
+                },
+                body: JSON.stringify({ summaryText, wordLimit, language }),
+              });
+            } catch (error) {
+              console.error("Error saving summary:", error);
+            }
+
+            if (language !== 'English') {
+              const translated = await translateText(summaryText, language);
+              setTranslatedSummary(translated);
+            }
+        } catch (error) {
+            console.error("❌ Summary Upload error:", error);
+            const errorMessage = "❌ Upload failed. Please check your webhook connection.";
+            setSummary(errorMessage);
+            setTranslatedSummary(errorMessage);
+            setSummaryError(true);
+        }
+      };
+
+      // --- Fetch 2: Mermaid Diagram ---
+      const fetchMermaid = async () => {
+          try {
+              const response = await fetch(
+                "http://localhost:5678/webhook-test/703361df-aa5d-47e7-8b5a-f3e1cea4acc1",
+                {
+                    method: "POST",
+                    body: formData, // Sending same file/data
+                    mode: "cors",
+                }
+              );
+              
+              if (!response.ok) throw new Error("Mermaid webhook failed");
+              const data = await response.json();
+              
+              // Expecting: { mermaid: "..." } or [{ mermaid: "..." }]
+              let code = Array.isArray(data) ? data[0]?.mermaid : data?.mermaid;
+              
+              if (code) {
+                  code = code.replace(/```mermaid/g, '').replace(/```/g, '').trim();
+                  setMermaidCode(code);
+              }
+          } catch (error) {
+              console.error("Mermaid fetch error:", error);
+              // We don't show an error to user for this secondary feature
+          }
+      };
+
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("wordLimit", wordLimit);
-        formData.append("language", language);
-
-        const response = await fetch(
-          "http://localhost:5678/webhook/8e4885d1-670f-4fad-9e45-4022f25d3fd7",
-          {
-            method: "POST",
-            body: formData,
-            mode: "cors",
-            headers: { Accept: "application/json, text/plain" },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-  
-        const contentType = response.headers.get("content-type");
-        let summaryText = "";
-
-        if (contentType && contentType.includes("application/json")) {
-          const json = await response.json();
-          // The user specified the format is: [{ useroutput: "...", chatbot: "..." }]
-          if (Array.isArray(json) && json.length > 0 && json[1].useroutput) {
-            summaryText = json[1].useroutput;
-          } else {
-            // Fallback for unexpected JSON structure
-            summaryText = JSON.stringify(json, null, 2);
-          }
-        } else {
-          summaryText = await response.text();
-        }
-  
-        summaryText = summaryText.trim() || "✅ Summary generated successfully.";
-        setSummary(summaryText);
-
-        // --- NEW: Save the summary as the context for the chatbot ---
-        try {
-          const token = localStorage.getItem("token");
-          await fetch("http://localhost:5000/api/chatbot/session", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "auth-token": token,
-            },
-            body: JSON.stringify({ context: summaryText }),
-          });
-          console.log("Chatbot context updated successfully.");
-        } catch (error) {
-          console.error("Error updating chatbot context:", error);
-        }
-
-        // --- FIX for 9-minute audio delay ---
-        // Only send a short snippet of the summary to the TTS service to prevent timeouts.
-        const ttsSnippet = summaryText.substring(0, 250); // Send first 250 chars for audio
-        console.log("Sending truncated snippet to TTS service:", ttsSnippet);
-
-        try {
-          const ttsResponse = await fetch("http://localhost:5001/api/tts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              text: ttsSnippet, // Use the short snippet
-              lang: languageConfig[language].translateCode,
-            }),
-          });
-          const blob = await ttsResponse.blob();
-          const url = URL.createObjectURL(blob);
-          setAudioUrl(url);
-        } catch (error) {
-          console.error("Error pre-fetching audio:", error);
-        }
-
-        // Save the FULL summary to the database
-        try {
-          const token = localStorage.getItem("token");
-          await fetch("http://localhost:5000/api/summary/add", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "auth-token": token,
-            },
-            body: JSON.stringify({ summaryText, wordLimit, language }),
-          });
-        } catch (error) {
-          console.error("Error saving summary:", error);
-        }
-
-        if (language !== 'English') {
-          const translated = await translateText(summaryText, language);
-          setTranslatedSummary(translated);
-        }
-      } catch (error) {
-        console.error("❌ Upload error:", error);
-        const errorMessage = "❌ Upload failed. Please check your webhook connection.";
-        setSummary(errorMessage);
-        setTranslatedSummary(errorMessage);
-        setSummaryError(true);
+          await Promise.all([fetchSummary(), fetchMermaid()]);
       } finally {
-        setLoading(false);
+          setLoading(false);
       }
     };
 
@@ -534,6 +572,12 @@ const Home = () => {
                        (language === 'English' ? summary : translatedSummary) || 
                        "Your summary will appear here."}
                     </p>
+                    {mermaidCode && (
+                       <div className="mermaid-wrapper" style={{marginTop: '20px', borderTop: '1px solid #ddd', paddingTop: '10px'}}>
+                         <h4>Flow Diagram</h4>
+                         <MermaidDiagram chart={mermaidCode} />
+                       </div>
+                    )}
                   </div>
 
                   {summary && !summaryError && (
