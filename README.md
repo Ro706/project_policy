@@ -94,8 +94,8 @@ graph TD
     B --> C{Backend API};
     C --> D[Database];
     C --> E{Payment Gateway};
-    C --> F{Chatbot Service};
-    F --> G[Gemini API];
+    F --> C{Chatbot Service};
+    G --> F[Gemini API];
     C --> H{Text-to-Speech Service};
 
     subgraph Frontend
@@ -117,12 +117,12 @@ graph TD
         G[Gemini API]
     end
 
-    B -- /api --> C;
-    C -- CRUD --> D;
-    C -- /api/payment --> E;
+    C -- /api --> B;
+    D -- CRUD --> C;
+    E -- /api/payment --> C;
     C -- /api/chatbot --> F;
     F -- /api/gemini --> G;
-    C -- /api/tts --> H;
+    H -- /api/tts --> C;
 ```
 
 
