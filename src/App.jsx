@@ -31,16 +31,18 @@ function App() {
   return (
     <Router>
       <Navbar />
-      <Routes>
-        <Route path="/" element={<ProtectedRoute element={<Home />} />} />
-        <Route path="/account" element={<ProtectedRoute element={<Account />} />} />
-        <Route path="/about" element={<ProtectedRoute element={<About />} />} />
-        <Route path="/feedback" element={<ProtectedRoute element={<Feedback />} />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/verify-otp" element={<VerifyOtp />} />
-      </Routes>
+      <div className="main-content-wrapper">
+        <Routes>
+          <Route path="/" element={<ProtectedRoute element={<Home />} />} />
+          <Route path="/account" element={<ProtectedRoute element={<Account />} />} />
+          <Route path="/about" element={<ProtectedRoute element={<About />} />} />
+          <Route path="/feedback" element={<ProtectedRoute element={<Feedback />} />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
+        </Routes>
+      </div>
       {!isChatOpen ? (
         <img
           src={chatbotIcon}
