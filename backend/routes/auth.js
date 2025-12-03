@@ -209,32 +209,37 @@ router.post('/google-login', async (req, res) => {
 
         let user = await User.findOne({ googleId: uid });
 
-        if (user) {
-            const data = {
-                user: {
-                    id: user.id
-                }
-            };
-            const authToken = jwt.sign(data, JWT_SECRET);
-            return res.json({ authToken });
-        } else {
-            user = await User.create({
-                name,
-                email,
-                googleId: uid,
-                isVerified: true
-            });
-            const data = {
-                user: {
-                    id: user.id
-                }
-            };
-            const authToken = jwt.sign(data, JWT_SECRET);
-            return res.json({ authToken });
+        if (!user) {
+            // Check if user exists with the same email (e.g. signed up via form)
+            user = await User.findOne({ email });
+            if (user) {
+                // Link Google account to existing user
+                user.googleId = uid;
+                // Google accounts are verified
+                if (!user.isVerified) user.isVerified = true;
+                await user.save();
+            } else {
+                // Create new user
+                user = await User.create({
+                    name,
+                    email,
+                    googleId: uid,
+                    isVerified: true
+                });
+            }
         }
+
+        const data = {
+            user: {
+                id: user.id
+            }
+        };
+        const authToken = jwt.sign(data, JWT_SECRET);
+        return res.json({ authToken });
+
     } catch (error) {
         console.error("Google login error:", error);
-        res.status(401).json({ error: "Invalid Google token" });
+        res.status(401).json({ error: "Invalid Google token", details: error.message });
     }
 });
 

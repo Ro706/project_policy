@@ -11,7 +11,9 @@ body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 40px 20px;
+  margin-top: -60px;
+  /* padding: -20px 20px;
+  padding : up down left right */
   min-height: 100vh;
   box-sizing: border-box;
 }
@@ -440,8 +442,7 @@ select:focus {
 
 @media (max-width: 600px) {
   .summarizer-container {
-    padding: 20px 15px;
-    margin-top: 60px;
+    margin-top: -60px;
   }
   
   .summarizer-card {

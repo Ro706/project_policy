@@ -13,7 +13,8 @@ const UserSchema = new Schema({
     },
     phone:{
         type: String,
-        unique: true //Asking for user's phone number and it's required
+        unique: true, //Asking for user's phone number and it's required
+        sparse: true
     },
     password:{
         type: String,
