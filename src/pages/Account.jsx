@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import SummaryModal from "../components/SummaryModal";
 import SummaryCard from "../components/SummaryCard";
 import { UserContext } from "../context/UserContext";
 
 const Account = () => {
   const { user, token } = useContext(UserContext);
+  const navigate = useNavigate();
   const [summaries, setSummaries] = useState([]);
   const [error, setError] = useState("");
   const [selectedSummary, setSelectedSummary] = useState(null);
@@ -111,80 +113,6 @@ const Account = () => {
     setSelectedSummary(null);
   };
 
-  const handlePayment = async () => {
-    try {
-      if (!token) throw new Error("No token found, please log in again.");
-
-      const keyRes = await fetch("http://localhost:5000/api/payment/get-key", {
-        headers: { "auth-token": token },
-      });
-      if (!keyRes.ok) throw new Error("Failed to fetch Razorpay key.");
-      const { key } = await keyRes.json();
-
-      const orderRes = await fetch("http://localhost:5000/api/payment/create-order", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": token,
-        },
-        body: JSON.stringify({ amount: 100, currency: "INR" }),
-      });
-
-      if (!orderRes.ok) throw new Error("Failed to create order.");
-
-      const order = await orderRes.json();
-
-      const options = {
-        key,
-        amount: order.amount,
-        currency: order.currency,
-        name: "project_policy",
-        description: "Test Transaction",
-        image: "https://example.com/your_logo",
-        order_id: order.id,
-        handler: async (response) => {
-          const verifyRes = await fetch("http://localhost:5000/api/payment/verify-payment", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "auth-token": token,
-            },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              amount: order.amount,
-              currency: order.currency,
-            }),
-          });
-
-          if (verifyRes.ok) {
-            alert("Payment successful!");
-            checkSubscription();
-          } else {
-            alert("Payment verification failed.");
-          }
-        },
-        prefill: {
-          name: user.name,
-          email: user.email,
-          contact: user.phone,
-        },
-        notes: {
-          address: "Razorpay Corporate Office",
-        },
-        theme: {
-          color: "#3399cc",
-        },
-      };
-      const rzp1 = new window.Razorpay(options);
-      rzp1.open();
-    } catch (err) {
-      console.error("❌ Payment error:", err);
-      setError(err.message);
-    }
-  };
-
   if (error) {
     return (
       <div style={{ padding: "20px", color: "red" }}>
@@ -285,7 +213,7 @@ const Account = () => {
             <h3>Upgrade to Premium</h3>
             <p>Unlock exclusive features and unlimited summaries.</p>
           </div>
-          <button onClick={handlePayment} className="subscribe-btn">
+          <button onClick={() => navigate("/pricing")} className="subscribe-btn">
             Subscribe Now
           </button>
         </div>
