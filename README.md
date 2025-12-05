@@ -90,48 +90,45 @@ The application provides a Text-to-Speech feature that converts generated summar
 
 ```mermaid
 graph TD
-    subgraph "Client Side"
-        Frontend[Frontend (React)]
+
+    subgraph Client_Side
+        Frontend[Frontend - React]
     end
 
-    subgraph "Server Side"
-        Backend[Backend (Node/Express)]
-        TTS[Python TTS Service]
-        n8n[n8n Automation]
+    subgraph Server_Side
+        Backend[Backend - Node Express]
+        TTSService[Python TTS Service]
+        n8nService[n8n Automation]
     end
-    
-    subgraph "External Services"
+
+    subgraph External_Services
         DB[(MongoDB)]
-        Gemini[Google Gemini API]
-        Razorpay[Razorpay]
+        GeminiAPI[Google Gemini API]
+        RazorpayAPI[Razorpay]
     end
 
-    User[User] -- Interacts --> Frontend
-    
-    %% Auth & Data
-    Frontend -- "Auth / Save Data" --> Backend
-    Backend -- "CRUD" --> DB
+    User --> Frontend
 
-    %% AI Features (n8n)
-    Frontend -- "Upload PDF (Webhook)" --> n8n
-    n8n -- "Generate Summary & Diagram" --> Gemini
-    Gemini -- "Result" --> n8n
-    n8n -- "Response" --> Frontend
+    Frontend -->|Auth or Save Data| Backend
+    Backend -->|CRUD| DB
 
-    %% Chatbot
-    Frontend -- "Chat Message" --> Backend
-    Backend -- "Get Context" --> DB
-    Backend -- "Prompt with Context" --> Gemini
-    Gemini -- "Reply" --> Backend
-    Backend -- "Reply" --> Frontend
+    Frontend -->|Upload PDF Webhook| n8nService
+    n8nService -->|Generate Summary and Diagram| GeminiAPI
+    GeminiAPI -->|Result| n8nService
+    n8nService -->|Response| Frontend
 
-    %% TTS
-    Frontend -- "Text Snippet" --> TTS
-    TTS -- "Audio Stream" --> Frontend
+    Frontend -->|Chat Message| Backend
+    Backend -->|Get Context| DB
+    Backend -->|Prompt with Context| GeminiAPI
+    GeminiAPI -->|Reply| Backend
+    Backend -->|Reply| Frontend
 
-    %% Payment
-    Frontend -- "Checkout" --> Razorpay
-    Frontend -- "Verify Payment" --> Backend
+    Frontend -->|Text Snippet| TTSService
+    TTSService -->|Audio Stream| Frontend
+
+    Frontend -->|Checkout| RazorpayAPI
+    Frontend -->|Verify Payment| Backend
+
 ```
 
 
