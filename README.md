@@ -90,33 +90,24 @@ The application provides a Text-to-Speech feature that converts generated summar
 
 ```mermaid
 graph TD
-    User[User];
-    Frontend[Frontend (React)];
-    Backend[Backend (Node/Express)];
-    DB[(MongoDB)];
-    n8n[n8n Automation];
-    TTS[Python TTS Service];
-    Gemini[Google Gemini API];
-    Razorpay[Razorpay];
-
-    User -- Interacts --> Frontend;
-    
     subgraph "Client Side"
-        Frontend;
+        Frontend[Frontend (React)];
     end;
 
     subgraph "Server Side"
-        Backend;
-        TTS;
-        n8n;
+        Backend[Backend (Node/Express)];
+        TTS[Python TTS Service];
+        n8n[n8n Automation];
     end;
     
     subgraph "External Services"
-        DB;
-        Gemini;
-        Razorpay;
+        DB[(MongoDB)];
+        Gemini[Google Gemini API];
+        Razorpay[Razorpay];
     end;
 
+    User[User] -- Interacts --> Frontend;
+    
     %% Auth & Data
     Frontend -- "Auth / Save Data" --> Backend;
     Backend -- "CRUD" --> DB;
