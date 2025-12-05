@@ -90,39 +90,57 @@ The application provides a Text-to-Speech feature that converts generated summar
 
 ```mermaid
 graph TD
-    A[User] --> B{Frontend};
-    B --> C{Backend API};
-    C --> D[Database];
-    C --> E{Payment Gateway};
-    F --> C{Chatbot Service};
-    G --> F[Gemini API];
-    C --> H{Text-to-Speech Service};
+    User[User]
+    Frontend[Frontend (React)]
+    Backend[Backend (Node/Express)]
+    DB[(MongoDB)]
+    n8n[n8n Automation]
+    TTS[Python TTS Service]
+    Gemini[Google Gemini API]
+    Razorpay[Razorpay]
 
-    subgraph Frontend
-        B1[React UI]
-        B2[React Router]
+    User -- Interacts --> Frontend
+    
+    subgraph "Client Side"
+        Frontend
     end
 
-    subgraph Backend
-        C1[Express Server]
-        C2[API Routes]
+    subgraph "Server Side"
+        Backend
+        TTS
+        n8n
+    end
+    
+    subgraph "External Services"
+        DB
+        Gemini
+        Razorpay
     end
 
-    subgraph Database
-        D1[MongoDB]
-    end
+    %% Auth & Data
+    Frontend -- "Auth / Save Data" --> Backend
+    Backend -- "CRUD" --> DB
 
-    subgraph External Services
-        E[Razorpay]
-        G[Gemini API]
-    end
+    %% AI Features (n8n)
+    Frontend -- "Upload PDF (Webhook)" --> n8n
+    n8n -- "Generate Summary & Diagram" --> Gemini
+    Gemini -- "Result" --> n8n
+    n8n -- "Response" --> Frontend
 
-    C -- /api --> B;
-    D -- CRUD --> C;
-    E -- /api/payment --> C;
-    C -- /api/chatbot --> F;
-    F -- /api/gemini --> G;
-    H -- /api/tts --> C;
+    %% Chatbot
+    Frontend -- "Chat Message" --> Backend
+    Backend -- "Get Context" --> DB
+    Backend -- "Prompt with Context" --> Gemini
+    Gemini -- "Reply" --> Backend
+    Backend -- "Reply" --> Frontend
+
+    %% TTS
+    Frontend -- "Text Snippet" --> TTS
+    TTS -- "Audio Stream" --> Frontend
+
+    %% Payment
+    Frontend -- "Checkout" --> Razorpay
+    Frontend -- "Verify Payment" --> Backend
 ```
 
 
