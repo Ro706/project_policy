@@ -91,47 +91,47 @@ The application provides a Text-to-Speech feature that converts generated summar
 ```mermaid
 graph TD
     subgraph "Client Side"
-        Frontend[Frontend (React)];
-    end;
+        Frontend[Frontend (React)]
+    end
 
     subgraph "Server Side"
-        Backend[Backend (Node/Express)];
-        TTS[Python TTS Service];
-        n8n[n8n Automation];
-    end;
+        Backend[Backend (Node/Express)]
+        TTS[Python TTS Service]
+        n8n[n8n Automation]
+    end
     
     subgraph "External Services"
-        DB[(MongoDB)];
-        Gemini[Google Gemini API];
-        Razorpay[Razorpay];
-    end;
+        DB[(MongoDB)]
+        Gemini[Google Gemini API]
+        Razorpay[Razorpay]
+    end
 
-    User[User] -- Interacts --> Frontend;
+    User[User] -- Interacts --> Frontend
     
     %% Auth & Data
-    Frontend -- "Auth / Save Data" --> Backend;
-    Backend -- "CRUD" --> DB;
+    Frontend -- "Auth / Save Data" --> Backend
+    Backend -- "CRUD" --> DB
 
     %% AI Features (n8n)
-    Frontend -- "Upload PDF (Webhook)" --> n8n;
-    n8n -- "Generate Summary & Diagram" --> Gemini;
-    Gemini -- "Result" --> n8n;
-    n8n -- "Response" --> Frontend;
+    Frontend -- "Upload PDF (Webhook)" --> n8n
+    n8n -- "Generate Summary & Diagram" --> Gemini
+    Gemini -- "Result" --> n8n
+    n8n -- "Response" --> Frontend
 
     %% Chatbot
-    Frontend -- "Chat Message" --> Backend;
-    Backend -- "Get Context" --> DB;
-    Backend -- "Prompt with Context" --> Gemini;
-    Gemini -- "Reply" --> Backend;
-    Backend -- "Reply" --> Frontend;
+    Frontend -- "Chat Message" --> Backend
+    Backend -- "Get Context" --> DB
+    Backend -- "Prompt with Context" --> Gemini
+    Gemini -- "Reply" --> Backend
+    Backend -- "Reply" --> Frontend
 
     %% TTS
-    Frontend -- "Text Snippet" --> TTS;
-    TTS -- "Audio Stream" --> Frontend;
+    Frontend -- "Text Snippet" --> TTS
+    TTS -- "Audio Stream" --> Frontend
 
     %% Payment
-    Frontend -- "Checkout" --> Razorpay;
-    Frontend -- "Verify Payment" --> Backend;
+    Frontend -- "Checkout" --> Razorpay
+    Frontend -- "Verify Payment" --> Backend
 ```
 
 
